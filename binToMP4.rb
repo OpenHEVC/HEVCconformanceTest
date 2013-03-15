@@ -87,7 +87,7 @@ def main (subDir, binFile , idxFile, nbFile, maxSize)
   hevcFile = "#{File.basename(binFile, File.extname(binFile))}.hevc"
   cmd      ="cp #{$sourcePattern}/#{subDir}/#{binFile} #{$sourcePattern}/#{subDir}/#{hevcFile}"
   system(cmd)
-  cmd      ="MP4Box -add #{$sourcePattern}/#{subDir}/#{hevcFile} #{$sourcePattern}/MP4/#{subDir}/#{mp4File}"
+  cmd      ="MP4Box -add #{$sourcePattern}/#{subDir}/#{hevcFile}:fmt=HEVC #{$sourcePattern}/MP4/#{subDir}/#{mp4File}"
   system(cmd)
   cmd      ="rm #{$sourcePattern}/#{subDir}/#{hevcFile}"
   system(cmd)
@@ -101,6 +101,7 @@ subDirTab = []
 subDirTab << "i_main"
 subDirTab << "ld_main"
 subDirTab << "lp_main"
+subDirTab << "ra_main"
 subDirTab.each do |subDir|
   listFile = getListFile(subDir)
   maxSize  = getMaxSizeFileName(listFile)
