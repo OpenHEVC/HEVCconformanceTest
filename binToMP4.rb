@@ -74,7 +74,13 @@ def printSubDir(subDir, nbFile, maxSize)
   for i in 0 ... sizeOfLine-1 do print "=" end; puts "="
   printLine(sizeOfLineAll)
 end
-
+###############################################################################
+# getFrameRate
+###############################################################################
+def getFrameRate(binFile)
+  from = /.*_.*_([0-9]*)_.*/
+  return binFile.scan(from)
+end
 ###############################################################################
 # main
 ###############################################################################
@@ -82,14 +88,9 @@ def main (subDir, binFile , idxFile, nbFile, maxSize)
   createSubDir(subDir)
   pwd      = Dir.pwd
   Dir.chdir($sourcePattern)
-  puts "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
+  puts "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)} = #{getFrameRate(binFile)} fps"
   mp4File  = "#{File.basename(binFile, File.extname(binFile))}.mp4"
-  hevcFile = "#{File.basename(binFile, File.extname(binFile))}.hevc"
-  cmd      ="cp #{$sourcePattern}/#{subDir}/#{binFile} #{$sourcePattern}/#{subDir}/#{hevcFile}"
-  system(cmd)
-  cmd      ="MP4Box -add #{$sourcePattern}/#{subDir}/#{hevcFile}:fmt=HEVC #{$sourcePattern}/MP4/#{subDir}/#{mp4File}"
-  system(cmd)
-  cmd      ="rm #{$sourcePattern}/#{subDir}/#{hevcFile}"
+  cmd      ="MP4Box -new -fps #{getFrameRate(binFile)} -add #{$sourcePattern}/#{subDir}/#{binFile}:fmt=HEVC #{$sourcePattern}/MP4/#{subDir}/#{mp4File} 2> log"
   system(cmd)
   Dir.chdir(pwd)
 end
