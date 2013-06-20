@@ -11,7 +11,7 @@ AVCONV_IDX      = 2
 $appli          = []
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = "-n -i"
+$appli[OPEN_HEVC_IDX]["option"]   = " -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 #
@@ -466,6 +466,7 @@ def getListFile (subDir)
   if File.exists?("#{$sourcePattern}/#{subDir}") then
     Dir.chdir("#{$sourcePattern}/#{subDir}")
     list  = Dir.glob("*.bin")
+    list += Dir.glob("*.bit")
     Dir.chdir(pwd)
     return list
   end
