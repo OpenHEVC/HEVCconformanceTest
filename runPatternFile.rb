@@ -12,7 +12,7 @@ HM_IDX          = 3
 $appli          = []
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = " -i"
+$appli[OPEN_HEVC_IDX]["option"]   = " -n  -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 #
@@ -108,10 +108,11 @@ def save_log(binFile)
   ret     = IO.popen("wc -l log_tmp").readlines
   from    = /([0-9]*) */
   nbLine  = (ret[0].scan(from))[0][0].to_i
-  system("head -n #{nbLine - 2} log_tmp > log_tmp1")
   if $appli[$appliIdx]["label"] ==  $appli[HM_IDX]["label"] then
+    system("head -n #{nbLine - 2} log_tmp > log_tmp1")
     system("tail -n #{nbLine - 4} log_tmp1 > #{$appli[$appliIdx]["label"]}/log_#{File.basename(binFile)}")
   else
+    system("head -n #{nbLine - 3} log_tmp > log_tmp1")
     system("cp log_tmp1 #{$appli[$appliIdx]["label"]}/log_#{File.basename(binFile)}")
   end
   File.delete("log_tmp")

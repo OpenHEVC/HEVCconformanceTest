@@ -11,7 +11,7 @@ AVCONV_IDX      = 2
 $appli          = []
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = " -i"
+$appli[OPEN_HEVC_IDX]["option"]   = " -n  -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 #
@@ -504,7 +504,7 @@ end
 # check_error
 ###############################################################################
 def check_error ()
-  cmd = "grep -n \"not ok\" log"
+  cmd = "grep -n \"Incorrect\" log"
   ret = IO.popen(cmd).readlines
   val = ret[ret.size-1].to_s.split(':')
   if val[1] != nil then
