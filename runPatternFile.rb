@@ -12,7 +12,7 @@ HM_IDX          = 3
 $appli          = []
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = " -n  -i"
+$appli[OPEN_HEVC_IDX]["option"]   = " -n -p 3 -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 #
@@ -62,14 +62,14 @@ end
 ###############################################################################
 # getListFile
 ###############################################################################
-def getListFile (subDir)
-  pwd   = Dir.pwd
-  if File.exists?("#{$sourcePattern}/#{subDir}") then
-    Dir.chdir("#{$sourcePattern}/#{subDir}")
+def getListFile ()
+  if File.exists?($sourcePattern) then
+    pwd   = Dir.pwd
+    Dir.chdir($sourcePattern})
     list  = Dir.glob("*.bin")
     list += Dir.glob("*.bit")
     Dir.chdir(pwd)
-    return list
+    return list.sort
   end
   return []
 end
@@ -84,24 +84,6 @@ def getMaxSizeFileName (listFile)
   return maxSize
 end
 ###############################################################################
-# printLine
-###############################################################################
-def printLine(sizeOfLineAll)
-  for i in 0 ... sizeOfLineAll-1 do print "=" end; puts "="
-end
-###############################################################################
-# printSubDir
-###############################################################################
-def printSubDir(subDir, nbFile, maxSize)
-  sizeOfLine    = "= ".size + nbFile.to_s.size*2 + 1 + " =".size
-  sizeOfLineAll = sizeOfLine + 1 + maxSize + "      ok =".size
-  printLine(sizeOfLineAll)
-  for i in 0 ... sizeOfLine do print "=" end
-  print "#{subDir.center(sizeOfLineAll-2*sizeOfLine)}"
-  for i in 0 ... sizeOfLine-1 do print "=" end; puts "="
-  printLine(sizeOfLineAll)
-end
-###############################################################################
 # save_log
 ###############################################################################
 def save_log(binFile) 
@@ -112,7 +94,7 @@ def save_log(binFile)
     system("head -n #{nbLine - 2} log_tmp > log_tmp1")
     system("tail -n #{nbLine - 4} log_tmp1 > #{$appli[$appliIdx]["label"]}/log_#{File.basename(binFile)}")
   else
-    system("head -n #{nbLine - 3} log_tmp > log_tmp1")
+    system("head -n #{nbLine - 1} log_tmp > log_tmp1")
     system("cp log_tmp1 #{$appli[$appliIdx]["label"]}/log_#{File.basename(binFile)}")
   end
   File.delete("log_tmp")
@@ -121,9 +103,9 @@ end
 ###############################################################################
 # main
 ###############################################################################
-def main (subDir, binFile , idxFile, nbFile, maxSize)
+def main (binFile , idxFile, nbFile, maxSize)
   puts "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-  cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{subDir}/#{binFile} #{$appli[$appliIdx]["output"]} > log_tmp"
+  cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log_tmp"
   system(cmd)
   save_log(binFile)
 end
@@ -136,19 +118,10 @@ if File.exist?($appli[$appliIdx]["label"]) then
 end
 Dir.mkdir($appli[$appliIdx]["label"])
 
-subDirTab = []
-subDirTab << "."
-subDirTab << "i_main"
-subDirTab << "ld_main"
-subDirTab << "lp_main"
-subDirTab << "ra_main"
-subDirTab.each do |subDir|
-  listFile = getListFile(subDir)
-  if listFile.length != 0 then
-    maxSize  = getMaxSizeFileName(listFile)
-    printSubDir(subDir, listFile.length, maxSize)
-    listFile.each_with_index do |binFile,idxFile|
-      main(subDir,binFile, idxFile+1, listFile.length, maxSize)
-    end
+listFile = getListFile()
+if listFile.length != 0 then
+  maxSize  = getMaxSizeFileName(listFile)
+  listFile.each_with_index do |binFile,idxFile|
+    main(binFile, idxFile+1, listFile.length, maxSize)
   end
 end
