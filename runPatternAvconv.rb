@@ -83,9 +83,15 @@ end
 # check_error
 ###############################################################################
 def check_error (md5)
-  cmd = "diff #{$appli[$appliIdx]["label"]}/#{md5} tests/#{md5}"
-  ret = IO.popen(cmd).readlines
-  if ret[0] != nil then
+  cmd  = "grep MD5 #{$appli[$appliIdx]["label"]}/#{md5}"
+  ret  = IO.popen(cmd).readlines
+  val1 = ret[ret.size-1].to_s.split('=')
+  
+  cmd  = "grep MD5 tests/#{md5}"
+  ret  = IO.popen(cmd).readlines
+  val2 = ret[ret.size-1].to_s.split('=')
+  
+  if val1[1] != val2[1] then
     puts " error ="
     exit if $stop == true
   else
