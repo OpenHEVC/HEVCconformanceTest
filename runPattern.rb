@@ -82,20 +82,22 @@ end
 # check_error
 ###############################################################################
 def check_error ()
-  cmd = "grep -n \"Incorrect\" log"
+  cmd = "grep -n \"Incorrect\" error"
   ret = IO.popen(cmd).readlines
   val = ret[ret.size-1].to_s.split(':')
   if val[1] != nil then
-    puts val[1]
+    puts "error ="
     exit if $stop == true 
+  else
+    puts "ok    ="
   end
 end
 ###############################################################################
 # main
 ###############################################################################
 def main (binFile , idxFile, nbFile, maxSize)
-  puts "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-  cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} 2> log"
+  print "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)} "
+  cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
   system(cmd)
   check_error()
 end

@@ -101,7 +101,7 @@ end
 ###############################################################################
 # main
 ###############################################################################
-def main (binFile , idxFile, nbFile, maxSize)
+def main (binFile, idxFile, nbFile, maxSize)
   print "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
   cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} 2> log > #{$appli[$appliIdx]["label"]}/#{File.basename(binFile, File.extname(binFile))}.md5"
   system(cmd)
