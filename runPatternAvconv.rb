@@ -4,7 +4,7 @@ require "runPatternCommon.rb"
 # Global
 ###############################################################################
 $appli[AVCONV_IDX]                = {}
-$appli[AVCONV_IDX]["option"]      = "-threads 3  -i"
+$appli[AVCONV_IDX]["option"]      = "-thread_type \"slice\" -threads 3  -i"
 $appli[AVCONV_IDX]["output"]      = "-f md5 -"
 $appli[AVCONV_IDX]["label"]       = "avconv"
 ###############################################################################
