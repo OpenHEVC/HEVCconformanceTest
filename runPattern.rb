@@ -42,7 +42,9 @@ def check_error (binFile)
     end
     
   else
-  
+
+    md5 = "#{File.basename(binFile, File.extname(binFile))}.md5"
+    save_md5(md5)
     puts " ="
   
   end

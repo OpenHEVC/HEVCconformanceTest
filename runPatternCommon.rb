@@ -73,6 +73,19 @@ def getListFile ()
   return []
 end
 ###############################################################################
+# deleteDir
+###############################################################################
+def deleteDir (dir)
+  pwd   = Dir.pwd
+  Dir.chdir(dir)
+  list  = Dir.glob("*")
+  list.each do |file|
+    File.delete(file)
+  end
+  Dir.chdir(pwd)
+  Dir.delete(dir)
+end
+###############################################################################
 # getMaxSizeFileName
 ###############################################################################
 def getMaxSizeFileName (listFile)
@@ -118,7 +131,7 @@ end
 def main ()
   getopts(ARGV)
   if File.exist?($appli[$appliIdx]["label"]) then
-    system("rm -r #{$appli[$appliIdx]["label"]}")
+    deleteDir($appli[$appliIdx]["label"])
   end
   Dir.mkdir($appli[$appliIdx]["label"])
   
