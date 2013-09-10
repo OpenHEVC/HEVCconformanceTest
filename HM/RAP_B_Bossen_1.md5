@@ -419,12 +419,80 @@ a9d90e103a9ab057bd4b97d0759c2948
 d643ca11579dad472e0c174b7b498f19
 643a2e24f8acc3aec30a9764b7d0acef
 ]
-Short-term reference picture with POC =  24 seems to have been removed or not correctly decoded.
-Short-term reference picture with POC =  22 seems to have been removed or not correctly decoded.
-Short-term reference picture with POC =  20 seems to have been removed or not correctly decoded.
-Short-term reference picture with POC =  16 seems to have been removed or not correctly decoded.
-POC   32 TId: 0 ( I-SLICE, QP 32 ) [L0 ] [L1 ] 
+POC   32 TId: 0 ( I-SLICE, QP 32 ) [L0 ] [L1 ] Warning: Got multiple decoded picture hash SEI messages. Using first.
 [MD5:
 5d1c36aaafde53b51b7168314fe5bf6a
 40a6d21751c3b1e187ed8d46d8c32dea
 ccc61b976f6364311189e8e6021f447d
+]
+POC   40 TId: 0 ( B-SLICE, QP 33 ) [L0 32 ] [L1 32 ] 
+[MD5:
+dd3560a18798e85b45e5d7a7304a7061
+00fb8f25483d6c835a2e8902a5c3882e
+ae1e79808bb557a2c8bf95a43a57b9ab
+]
+POC   36 TId: 0 ( B-SLICE, QP 34 ) [L0 32 40 ] [L1 40 32 ] 
+[MD5:
+5f44841167fb3a07d0a613fb2b86b992
+ddec496c6f67859c93c9d1686705f651
+5717cfa94ff2df1f9990be67d57efa59
+]
+POC   34 TId: 0 ( B-SLICE, QP 35 ) [L0 32 36 ] [L1 36 40 ] 
+[MD5:
+91106a3e8c179d51cc584134f7f9fe5c
+4a8509550eb90a4a9fc7b9ef2ad20a03
+4a22e6c5747d39ca074c72a4a9567215
+]
+POC   33 TId: 0 ( B-SLICE, QP 36 ) [L0 32 34 ] [L1 34 36 ] 
+[MD5:
+f0f308a8640afbdebcd12cdfd8e2811f
+a4c98954f7fe2df301bd97e0530e2e30
+f5cbcb94bc63b8028735f93108c58012
+]
+POC   35 TId: 0 ( B-SLICE, QP 36 ) [L0 34 32 ] [L1 36 40 ] 
+[MD5:
+7454d8c670e7559e16a2cb576e9cab5c
+aa99f4f2b6e2021cd3fb60492a94b04e
+e901d8b20587c95a50de02b873080413
+]
+POC   38 TId: 0 ( B-SLICE, QP 35 ) [L0 36 34 ] [L1 40 36 ] 
+[MD5:
+422b29a090b01f702be3ed3c6714ccd6
+3853fb22552c34b3a03db589c5abf2b6
+edd34608575738e069df5e4ba65c1a2d
+]
+POC   37 TId: 0 ( B-SLICE, QP 36 ) [L0 36 32 ] [L1 38 40 ] 
+[MD5:
+4de412995f4d948e02cfe5e77e0626d0
+7c8c344ec7305b9e141b2d68209cee9b
+dec6f0be416dd51523eb7ff7299a83f8
+]
+POC   39 TId: 0 ( B-SLICE, QP 36 ) [L0 38 36 ] [L1 40 38 ] 
+[MD5:
+b86845c658223003cd39f230e07094e3
+a24c0b15427d35d420667fceea4c451f
+a7adbe84e3e75e10d867d840a98ea6b0
+]
+POC   44 TId: 0 ( B-SLICE, QP 34 ) [L0 40 38 ] [L1 40 38 ] 
+[MD5:
+515c455e30d124b4ce6f780fcb17e601
+71a78ada133b18fa37fa463910c648e2
+096d002e49d64ef7db6873a024f957bd
+]
+POC   42 TId: 0 ( B-SLICE, QP 35 ) [L0 40 38 ] [L1 44 40 ] 
+[MD5:
+61f7b1529f85daf2061044b93b04243e
+a778844f48c1ac707efc96b467be82db
+cb1f0daac178d6e13e166fa36442c777
+]
+POC   41 TId: 0 ( B-SLICE, QP 36 ) [L0 40 42 ] [L1 42 44 ] 
+[MD5:
+2c939ca08e822709864ed806fcb89fc8
+9417c581e64dcee8152ec1976f7d4981
+4536c79ad0c7b0e1e7ca7cb0031d48b5
+]
+POC   43 TId: 0 ( B-SLICE, QP 36 ) [L0 42 40 ] [L1 44 42 ] 
+[MD5:
+e565e20ae6b93fb99b5c361c7b445e9b
+59a02d6238fbe59541b0a511d1238144
+d59f98ecf6d0bec8282cdac019eee7c0
