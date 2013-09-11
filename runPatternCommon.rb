@@ -11,13 +11,13 @@ HM_IDX          = 3
 $appli          = []
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = "-n -p 3 -i"
+$appli[OPEN_HEVC_IDX]["option"]   = "-n -p 4 -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 #
 #
 $appli[AVCONV_IDX]                = {}
-$appli[AVCONV_IDX]["option"]      = "-decode-checksum 1  -threads 3 -i"
+$appli[AVCONV_IDX]["option"]      = "-decode-checksum 1  -threads 4 -thread_type \"slice\" -i"
 $appli[AVCONV_IDX]["output"]      = "-f null -"
 $appli[AVCONV_IDX]["label"]       = "avconv"
 #
