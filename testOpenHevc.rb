@@ -5,7 +5,7 @@ require "runPatternCommon.rb"
 ###############################################################################
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = "-c -p 4 -n -i"
+$appli[OPEN_HEVC_IDX]["option"]   = "-c -n -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 

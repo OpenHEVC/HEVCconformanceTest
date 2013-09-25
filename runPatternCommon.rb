@@ -11,13 +11,13 @@ HM_IDX          = 3
 $appli          = []
 #
 $appli[OPEN_HEVC_IDX]             = {}
-$appli[OPEN_HEVC_IDX]["option"]   = "-n -p 4 -i"
+$appli[OPEN_HEVC_IDX]["option"]   = "-n -i"
 $appli[OPEN_HEVC_IDX]["output"]   = ""
 $appli[OPEN_HEVC_IDX]["label"]    = "openHEVC"
 #
 #
 $appli[AVCONV_IDX]                = {}
-$appli[AVCONV_IDX]["option"]      = "-decode-checksum 1  -threads 4 -thread_type \"slice\" -i"
+$appli[AVCONV_IDX]["option"]      = "-decode-checksum 1 -thread_type \"slice\" -i"
 $appli[AVCONV_IDX]["output"]      = "-f null -"
 $appli[AVCONV_IDX]["label"]       = "avconv"
 #
@@ -34,16 +34,38 @@ def getopts (argv)
   $sourcePattern = nil
   $exec          = nil
   $stop          = true
+  $yuv           = false
+  $nbThreads     = 1
+  $FrameBase     = false
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help();
     when "-dir"       : $sourcePattern = argv[i+1]
     when "-exec"      : $exec          = argv[i+1]
     when "-noStop"    : $stop          = false
+    when "-yuv"       : $yuv           = true
+    when "-p"         : $nbThreads     = argv[i+1]
+    when "-f"         : $FrameBase     = true
     end
   end
   help() if $sourcePattern == nil or $exec == nil
   $appliIdx = if /hevc/ =~ $exec then OPEN_HEVC_IDX elsif /TAppDecoder/ =~ $exec then HM_IDX else AVCONV_IDX end
+  if $appliIdx == OPEN_HEVC_IDX then
+    if $FrameBase == true then
+      $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$appli[$appliIdx]["option"]}"
+    else
+      $appli[$appliIdx]["option"] = "-p #{$nbThreads}    #{$appli[$appliIdx]["option"]}"
+    end
+  elsif $appliIdx == AVCONV_IDX then
+    if $FrameBase == true then
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
+    else
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
+    end
+    if $yuv == false then
+      $appli[$appliIdx]["option"] = "-decode-checksum 1 #{$appli[$appliIdx]["option"]}"
+    end
+  end
 end
 ###############################################################################
 # help
@@ -55,6 +77,9 @@ def help ()
   puts "==             -dir       : pattern directory path                  =="
   puts "==             -exec      : exec path                               =="
   puts "==             -noStop    : not stop when diff is not ok            =="
+  puts "==             -yuv       : check yuv md5                           =="
+  puts "==             -p         : nombre of threads                       =="
+  puts "==             -f         : enable FrameBase                        =="
   puts "======================================================================"
   exit
 end
@@ -84,6 +109,12 @@ def deleteDir (dir)
   end
   Dir.chdir(pwd)
   Dir.delete(dir)
+end
+###############################################################################
+# printLine
+###############################################################################
+def printLine(sizeOfLineAll)
+  for i in 0 ... sizeOfLineAll-1 do print "=" end; puts "="
 end
 ###############################################################################
 # getMaxSizeFileName
@@ -119,9 +150,27 @@ end
 ###############################################################################
 def run (binFile, idxFile, nbFile, maxSize)
   print "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
+
+  yuv = "#{File.basename(binFile, File.extname(binFile))}.yuv"
+  if $yuv == true then 
+    if $appliIdx !=  AVCONV_IDX then
+      $appli[$appliIdx]["output"] = "-o #{yuv}"
+    else
+      $appli[$appliIdx]["output"] = "-f md5 -"
+    end
+  end
+
   cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
+  timeStart = Time.now
   system(cmd)
+  $runTime = Time.now - timeStart
   check_error(binFile)
+
+  if $yuv == true then
+    if $appliIdx !=  AVCONV_IDX then
+      File.delete(yuv)
+    end
+  end
   File.delete("log")
   File.delete("error")
 end
@@ -138,6 +187,17 @@ def main ()
   listFile = getListFile()
   if listFile.length != 0 then
     maxSize  = getMaxSizeFileName(listFile)
+    if $yuv == true then 
+      if $appliIdx !=  AVCONV_IDX then
+	$appli[$appliIdx]["output"] = "-o yuv"
+      else
+	$appli[$appliIdx]["output"] = "-f md5 -"
+      end
+    end
+    cmd = "#{$exec} #{$appli[$appliIdx]["option"]} binFile #{$appli[$appliIdx]["output"]} > log 2> error"
+    printLine(cmd.size)
+    puts cmd
+    printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
       run(binFile, idxFile+1, listFile.length, maxSize)
     end
