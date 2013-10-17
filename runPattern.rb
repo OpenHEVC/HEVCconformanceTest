@@ -1,13 +1,13 @@
 #!/usr/bin/ruby
 require "runPatternCommon.rb"
 ###############################################################################
-# grep_info
+# grep_msg
 ###############################################################################
-def grep_info (info)
-  cmd = "grep \"#{info}\" error"
+def grep_msg (msg, log)
+  cmd = "grep \"#{msg}\" #{log}"
   ret = IO.popen(cmd).readlines
   if ret[0] != nil then
-    puts " #{info}"
+    puts " #{msg}"
     return -1
   end
   return 0
@@ -44,7 +44,7 @@ end
 # check_error
 ###############################################################################
 def check_error (binFile)
-  return if grep_info("Frame base and tiles enabled not yet implemented") == -1
+  return if grep_msg("Segmentation fault", "error") == -1
   if $yuv == true then
     check_yuv(binFile)
     return
