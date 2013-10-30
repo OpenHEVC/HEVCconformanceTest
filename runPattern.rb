@@ -16,9 +16,11 @@ end
 # check_yuv
 ###############################################################################
 def check_yuv (binFile)
+  return if grep_msg("Segmentation fault", "error") == -1
+
   md5 = "#{File.basename(binFile, File.extname(binFile))}.md5"
 
-  if $appliIdx == AVCONV_IDX then
+  if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
     save_md5(md5)
     cmd  = "grep MD5 #{$appli[$appliIdx]["label"]}/#{md5}"
   else
@@ -45,10 +47,7 @@ end
 ###############################################################################
 def check_error (binFile)
   return if grep_msg("Segmentation fault", "error") == -1
-  if $yuv == true then
-    check_yuv(binFile)
-    return
-  end
+  
   cmd = "grep \"Correct\" error"
   ret = IO.popen(cmd).readlines
   if ret[1] == nil and $appliIdx != HM_IDX then
@@ -94,6 +93,25 @@ def check_error (binFile)
   
   end
 
+end
+###############################################################################
+# check_perfs
+###############################################################################
+def check_perfs (binFile)
+  if $appliIdx == OPEN_HEVC_IDX then
+    cmd     = "grep frame log"
+    ret     = IO.popen(cmd).readlines
+    puts " #{ret}"
+  elsif $appliIdx == HM_IDX then
+    cmd     = "grep POC log"
+    ret     = IO.popen(cmd).readlines
+    puts sprintf(" frame= #{ret.size} fps= #{(ret.size/$runTime).round} time= %.2f", $runTime )
+  else
+    cmd     = "grep frame error"
+    ret     = IO.popen(cmd).readlines
+    val     = ret[0].scan(/frame= *([0-9]*)/)[0][0].to_i
+    puts sprintf(" frame= #{val} fps= #{(val/$runTime).round} time= %.2f", $runTime )
+  end
 end
 ###############################################################################
 # main

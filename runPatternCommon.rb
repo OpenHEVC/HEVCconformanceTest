@@ -4,6 +4,7 @@
 OPEN_HEVC_IDX   = 1
 AVCONV_IDX      = 2
 HM_IDX          = 3
+FFMPEG_IDX      = 4
 ###############################################################################
 # Global
 ###############################################################################
@@ -26,6 +27,11 @@ $appli[HM_IDX]["option"]          = "-b"
 $appli[HM_IDX]["output"]          = ""
 $appli[HM_IDX]["label"]           = "HM"
 #
+$appli[FFMPEG_IDX]                = {}
+$appli[FFMPEG_IDX]["option"]      = "-decode-checksum 1 -thread_type \"slice\" -i"
+$appli[FFMPEG_IDX]["output"]      = "-vsync drop -f null -"
+$appli[FFMPEG_IDX]["label"]       = "ffmpeg"
+#
 ###############################################################################
 # getopts
 ###############################################################################
@@ -34,6 +40,7 @@ def getopts (argv)
   $sourcePattern = nil
   $exec          = nil
   $stop          = true
+  $check         = true
   $yuv           = false
   $nbThreads     = 1
   $FrameBase     = false
@@ -43,26 +50,34 @@ def getopts (argv)
     when "-dir"       : $sourcePattern = argv[i+1]
     when "-exec"      : $exec          = argv[i+1]
     when "-noStop"    : $stop          = false
+    when "-noCheck"   : $check         = false
     when "-yuv"       : $yuv           = true
     when "-p"         : $nbThreads     = argv[i+1]
     when "-f"         : $FrameBase     = true
     end
   end
   help() if $sourcePattern == nil or $exec == nil
-  $appliIdx = if /hevc/ =~ $exec then OPEN_HEVC_IDX elsif /TAppDecoder/ =~ $exec then HM_IDX else AVCONV_IDX end
+  $appliIdx = if /hevc/ =~ $exec then OPEN_HEVC_IDX 
+	      elsif /TAppDecoder/ =~ $exec then HM_IDX
+	      elsif /ffmpeg/ =~ $exec then FFMPEG_IDX
+	      else AVCONV_IDX end
+
   if $appliIdx == OPEN_HEVC_IDX then
     if $FrameBase == true then
       $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$appli[$appliIdx]["option"]}"
     else
       $appli[$appliIdx]["option"] = "-p #{$nbThreads}    #{$appli[$appliIdx]["option"]}"
     end
-  elsif $appliIdx == AVCONV_IDX then
+    if $check == false and $yuv == false then
+      $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
+    end
+  elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
     if $FrameBase == true then
       $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
     else
       $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
     end
-    if $yuv == false then
+    if $check == true and $yuv == false then
       $appli[$appliIdx]["option"] = "-decode-checksum 1 #{$appli[$appliIdx]["option"]}"
     end
   end
@@ -77,6 +92,7 @@ def help ()
   puts "==             -dir       : pattern directory path                  =="
   puts "==             -exec      : exec path                               =="
   puts "==             -noStop    : not stop when diff is not ok            =="
+  puts "==             -noCheck   : no check  md5                           =="
   puts "==             -yuv       : check yuv md5                           =="
   puts "==             -p         : nombre of threads                       =="
   puts "==             -f         : enable FrameBase                        =="
@@ -130,12 +146,11 @@ end
 # save_md5
 ###############################################################################
 def save_md5(md5) 
-  if $appliIdx == AVCONV_IDX then
+  if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
     system("cp log #{$appli[$appliIdx]["label"]}/#{md5}")
   else
     ret     = IO.popen("wc -l log").readlines
-    from    = /([0-9]*) */
-    nbLine  = (ret[0].scan(from))[0][0].to_i
+    nbLine  = (ret[0].scan(/([0-9]*) */))[0][0].to_i
     if $appliIdx == HM_IDX then
       system("head -n #{nbLine - 2} log     > log_tmp")
       system("tail -n #{nbLine - 4} log_tmp > #{$appli[$appliIdx]["label"]}/#{md5}")
@@ -152,11 +167,13 @@ def run (binFile, idxFile, nbFile, maxSize)
   print "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
 
   yuv = "#{File.basename(binFile, File.extname(binFile))}.yuv"
-  if $yuv == true then 
-    if $appliIdx !=  AVCONV_IDX then
-      $appli[$appliIdx]["output"] = "-o #{yuv}"
-    else
+  if $check == true and $yuv == true then 
+    if $appliIdx ==  AVCONV_IDX then
       $appli[$appliIdx]["output"] = "-f md5 -"
+    elsif $appliIdx ==  FFMPEG_IDX then
+      $appli[$appliIdx]["output"] = "-vsync drop -f md5 -"
+    else
+      $appli[$appliIdx]["output"] = "-o #{yuv}"
     end
   end
 
@@ -164,10 +181,18 @@ def run (binFile, idxFile, nbFile, maxSize)
   timeStart = Time.now
   system(cmd)
   $runTime = Time.now - timeStart
-  check_error(binFile)
 
-  if $yuv == true then
-    if $appliIdx !=  AVCONV_IDX then
+  if $check == true then
+    if $yuv == true then
+      check_yuv(binFile)
+    else
+      check_error(binFile)
+    end
+  else
+    check_perfs(binFile)
+  end
+  if $check == true and $yuv == true then
+    if $appliIdx !=  AVCONV_IDX and $appliIdx !=  FFMPEG_IDX then
       File.delete(yuv)
     end
   end
@@ -187,13 +212,16 @@ def main ()
   listFile = getListFile()
   if listFile.length != 0 then
     maxSize  = getMaxSizeFileName(listFile)
-    if $yuv == true then 
-      if $appliIdx !=  AVCONV_IDX then
-	$appli[$appliIdx]["output"] = "-o yuv"
+    if $check == true and $yuv == true then 
+      if $appliIdx ==  AVCONV_IDX then
+        $appli[$appliIdx]["output"] = "-f md5 -"
+      elsif $appliIdx ==  FFMPEG_IDX then
+        $appli[$appliIdx]["output"] = "-vsync drop -f md5 -"
       else
-	$appli[$appliIdx]["output"] = "-f md5 -"
+        $appli[$appliIdx]["output"] = "-o yuv"
       end
     end
+    
     cmd = "#{$exec} #{$appli[$appliIdx]["option"]} binFile #{$appli[$appliIdx]["output"]} > log 2> error"
     printLine(cmd.size)
     puts cmd
