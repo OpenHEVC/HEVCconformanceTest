@@ -43,7 +43,7 @@ def getopts (argv)
   $check         = true
   $yuv           = false
   $nbThreads     = 1
-  $FrameBase     = false
+  $FrameBase     = 1
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help();
@@ -53,7 +53,7 @@ def getopts (argv)
     when "-noCheck"   : $check         = false
     when "-yuv"       : $yuv           = true
     when "-p"         : $nbThreads     = argv[i+1]
-    when "-f"         : $FrameBase     = true
+    when "-f"         : $FrameBase     = argv[i+1]
     end
   end
   help() if $sourcePattern == nil or $exec == nil
@@ -63,17 +63,13 @@ def getopts (argv)
 	      else AVCONV_IDX end
 
   if $appliIdx == OPEN_HEVC_IDX then
-    if $FrameBase == true then
-      $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$appli[$appliIdx]["option"]}"
-    else
-      $appli[$appliIdx]["option"] = "-p #{$nbThreads}    #{$appli[$appliIdx]["option"]}"
-    end
+    $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$FrameBase} #{$appli[$appliIdx]["option"]}"
     if $check == false and $yuv == false then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
-    if $FrameBase == true then
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
+    if $FrameBase != 1 then
+      $appli[$appliIdx]["option"] = "-threads #{$FrameBase} -thread_type \"frame\" -i"
     else
       $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
     end
@@ -94,8 +90,8 @@ def help ()
   puts "==             -noStop    : not stop when diff is not ok            =="
   puts "==             -noCheck   : no check  md5                           =="
   puts "==             -yuv       : check yuv md5                           =="
-  puts "==             -p         : nombre of threads                       =="
-  puts "==             -f         : enable FrameBase                        =="
+  puts "==             -p         : nombre of threads for Slice             =="
+  puts "==             -f         : nombre of threads for FrameBase         =="
   puts "======================================================================"
   exit
 end
