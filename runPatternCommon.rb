@@ -68,8 +68,10 @@ def getopts (argv)
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
-    if $FrameBase != 1 then
-      $appli[$appliIdx]["option"] = "-threads #{$FrameBase} -thread_type \"frame\" -i"
+    if $FrameBase != 1 and $nbThreads!= 1 then
+      $appli[$appliIdx]["option"] = "-threads2 #{$FrameBase} -threads #{$nbThreads} -thread_type \"frameslice\" -i"
+    elsif $FrameBase != 1 then
+      $appli[$appliIdx]["option"] = "-threads2 #{$FrameBase} -thread_type \"frame\" -i"
     else
       $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
     end
