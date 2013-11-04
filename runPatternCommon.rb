@@ -52,8 +52,8 @@ def getopts (argv)
     when "-noStop"    : $stop          = false
     when "-noCheck"   : $check         = false
     when "-yuv"       : $yuv           = true
-    when "-p"         : $nbThreads     = argv[i+1]
-    when "-f"         : $ThreadType    = argv[i+1]
+    when "-p"         : $nbThreads     = argv[i+1].to_i
+    when "-f"         : $ThreadType    = argv[i+1].to_i
     end
   end
   help() if $sourcePattern == nil or $exec == nil
