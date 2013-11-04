@@ -43,7 +43,7 @@ def getopts (argv)
   $check         = true
   $yuv           = false
   $nbThreads     = 1
-  $FrameBase     = 1
+  $ThreadType    = 1
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help();
@@ -53,7 +53,7 @@ def getopts (argv)
     when "-noCheck"   : $check         = false
     when "-yuv"       : $yuv           = true
     when "-p"         : $nbThreads     = argv[i+1]
-    when "-f"         : $FrameBase     = argv[i+1]
+    when "-f"         : $ThreadType    = argv[i+1]
     end
   end
   help() if $sourcePattern == nil or $exec == nil
@@ -63,17 +63,17 @@ def getopts (argv)
 	      else AVCONV_IDX end
 
   if $appliIdx == OPEN_HEVC_IDX then
-    $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$FrameBase} #{$appli[$appliIdx]["option"]}"
+    $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$ThreadType} #{$appli[$appliIdx]["option"]}"
     if $check == false and $yuv == false then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
-    if $FrameBase != 1 and $nbThreads!= 1 then
-      $appli[$appliIdx]["option"] = "-threads2 #{$FrameBase} -threads #{$nbThreads} -thread_type \"frameslice\" -i"
-    elsif $FrameBase != 1 then
-      $appli[$appliIdx]["option"] = "-threads2 #{$FrameBase} -thread_type \"frame\" -i"
-    else
+    if $ThreadType == 3 then
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frameslice\" -i"
+    elsif $ThreadType == 2 then
       $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
+    else
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
     end
     if $check == true and $yuv == false then
       $appli[$appliIdx]["option"] = "-decode-checksum 1 #{$appli[$appliIdx]["option"]}"
@@ -84,17 +84,17 @@ end
 # help
 ###############################################################################
 def help ()
-  puts "======================================================================"
-  puts "== runPattern options :                                             =="
-  puts "==             -h         : help                                    =="
-  puts "==             -dir       : pattern directory path                  =="
-  puts "==             -exec      : exec path                               =="
-  puts "==             -noStop    : not stop when diff is not ok            =="
-  puts "==             -noCheck   : no check  md5                           =="
-  puts "==             -yuv       : check yuv md5                           =="
-  puts "==             -p         : nombre of threads for Slice             =="
-  puts "==             -f         : nombre of threads for FrameBase         =="
-  puts "======================================================================"
+  puts "==========================================================================="
+  puts "== runPattern options :                                                  =="
+  puts "==             -h         : help                                         =="
+  puts "==             -dir       : pattern directory path                       =="
+  puts "==             -exec      : exec path                                    =="
+  puts "==             -noStop    : not stop when diff is not ok                 =="
+  puts "==             -noCheck   : no check  md5                                =="
+  puts "==             -yuv       : check yuv md5                                =="
+  puts "==             -p         : nombre of threads for Slice                  =="
+  puts "==             -f         : thread type (1:Frame, 2:Slice, 3:FrameSlice) =="
+  puts "==========================================================================="
   exit
 end
 ###############################################################################
