@@ -106,6 +106,7 @@ def getListFile ()
     Dir.chdir($sourcePattern)
     list  = Dir.glob("*.bin")
     list += Dir.glob("*.bit")
+    list += Dir.glob("*.hvc")
     Dir.chdir(pwd)
     return list.sort
   end
