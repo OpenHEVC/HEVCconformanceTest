@@ -42,8 +42,8 @@ def getopts (argv)
   $stop          = true
   $check         = true
   $yuv           = false
-  $nbThreads     = 1
-  $ThreadType    = 1
+  nbThreads      = 1
+  threadType     = 1
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help();
@@ -52,28 +52,28 @@ def getopts (argv)
     when "-noStop"    : $stop          = false
     when "-noCheck"   : $check         = false
     when "-yuv"       : $yuv           = true
-    when "-p"         : $nbThreads     = argv[i+1].to_i
-    when "-f"         : $ThreadType    = argv[i+1].to_i
+    when "-p"         : nbThreads      = argv[i+1].to_i
+    when "-f"         : threadType     = argv[i+1].to_i
     end
   end
-  help() if $sourcePattern == nil or $exec == nil
+  help() if $sourcePattern == nil or $exec == nil or (threadType!=1 and threadType!=2 and threadType!=4) 
   $appliIdx = if /hevc/ =~ $exec then OPEN_HEVC_IDX 
 	      elsif /TAppDecoder/ =~ $exec then HM_IDX
 	      elsif /ffmpeg/ =~ $exec then FFMPEG_IDX
 	      else AVCONV_IDX end
 
   if $appliIdx == OPEN_HEVC_IDX then
-    $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$ThreadType} #{$appli[$appliIdx]["option"]}"
+    $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} #{$appli[$appliIdx]["option"]}"
     if $check == false and $yuv == false then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
-    if $ThreadType == 3 then
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frameslice\" -i"
-    elsif $ThreadType == 2 then
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
+    if threadType == 1 then
+      $appli[$appliIdx]["option"] = "-threads #{nbThreads} -thread_type \"frame\" -i"
+    elsif threadType == 2 then
+      $appli[$appliIdx]["option"] = "-threads #{nbThreads} -thread_type \"slice\" -i"
     else
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
+      $appli[$appliIdx]["option"] = "-threads #{nbThreads} -thread_type \"frameslice\" -i"
     end
     if $check == true and $yuv == false then
       $appli[$appliIdx]["option"] = "-decode-checksum 1 #{$appli[$appliIdx]["option"]}"
@@ -93,7 +93,7 @@ def help ()
   puts "==             -noCheck   : no check  md5                                =="
   puts "==             -yuv       : check yuv md5                                =="
   puts "==             -p         : nombre of threads for Slice                  =="
-  puts "==             -f         : thread type (1:Frame, 2:Slice, 3:FrameSlice) =="
+  puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
   puts "==========================================================================="
   exit
 end
