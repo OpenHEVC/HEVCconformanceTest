@@ -142,6 +142,16 @@ def getMaxSizeFileName (listFile)
   return maxSize
 end
 ###############################################################################
+# getFileNameYUV
+###############################################################################
+def getFileNameYUV (binFile)
+  return "#{File.basename(binFile, File.extname(binFile))}" if !File.exists?("log")
+  cmd     = "grep frame log"
+  ret     = IO.popen(cmd).readlines
+  size    = ret[ret.size-1].scan(/.*video_size= ([0-9]*x[0-9]*)/)[0][0]
+  return "#{File.basename(binFile, File.extname(binFile))}_#{size}.yuv"
+end
+###############################################################################
 # save_md5
 ###############################################################################
 def save_md5(md5) 
@@ -163,16 +173,17 @@ end
 # run
 ###############################################################################
 def run (binFile, idxFile, nbFile, maxSize)
+  File.delete("log")   if File.exists?("log")
+  File.delete("error") if File.exists?("error")
   print "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
 
-  yuv = "#{File.basename(binFile, File.extname(binFile))}.yuv"
   if $check == true and $yuv == true then 
     if $appliIdx ==  AVCONV_IDX then
       $appli[$appliIdx]["output"] = "-f md5 -"
     elsif $appliIdx ==  FFMPEG_IDX then
       $appli[$appliIdx]["output"] = "-vsync drop -f md5 -"
     else
-      $appli[$appliIdx]["output"] = "-o #{yuv}"
+      $appli[$appliIdx]["output"] = "-o #{getFileNameYUV(binFile)}"
     end
   end
 
@@ -192,7 +203,7 @@ def run (binFile, idxFile, nbFile, maxSize)
   end
   if $check == true and $yuv == true then
     if $appliIdx !=  AVCONV_IDX and $appliIdx !=  FFMPEG_IDX then
-      File.delete(yuv)
+      File.delete(getFileNameYUV(binFile))
     end
   end
   File.delete("log")

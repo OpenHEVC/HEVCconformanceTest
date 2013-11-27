@@ -24,7 +24,7 @@ def check_yuv (binFile)
     save_md5(md5)
     cmd  = "grep MD5 #{$appli[$appliIdx]["label"]}/#{md5}"
   else
-    yuv = "#{File.basename(binFile, File.extname(binFile))}.yuv"
+    yuv = getFileNameYUV(binFile)
     cmd = "openssl md5 #{yuv}"
   end
 
