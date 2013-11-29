@@ -64,7 +64,7 @@ def getopts (argv)
 
   if $appliIdx == OPEN_HEVC_IDX then
     $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} #{$appli[$appliIdx]["option"]}"
-    if $check == false and $yuv == false then
+    if $check == false or $yuv == true then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
@@ -97,6 +97,17 @@ def help ()
   puts "==========================================================================="
   exit
 end
+
+###############################################################################
+# sysIO
+###############################################################################
+def sysIO (cmd)
+    sys = IO.popen(cmd)
+    ret = sys.readlines
+    sys.close_read
+    return ret
+end
+
 ###############################################################################
 # getListFile
 ###############################################################################
@@ -147,7 +158,7 @@ end
 def getFileNameYUV (binFile)
   return "#{File.basename(binFile, File.extname(binFile))}" if !File.exists?("log")
   cmd     = "grep frame log"
-  ret     = IO.popen(cmd).readlines
+  ret     = sysIO(cmd)
   size    = ret[ret.size-1].scan(/.*video_size= ([0-9]*x[0-9]*)/)[0][0]
   return "#{File.basename(binFile, File.extname(binFile))}_#{size}.yuv"
 end
@@ -156,16 +167,16 @@ end
 ###############################################################################
 def save_md5(md5) 
   if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
-    system("cp log #{$appli[$appliIdx]["label"]}/#{md5}")
+    sysIO("cp log #{$appli[$appliIdx]["label"]}/#{md5}")
   else
-    ret     = IO.popen("wc -l log").readlines
+    ret     = sysIO("wc -l log")
     nbLine  = (ret[0].scan(/([0-9]*) */))[0][0].to_i
     if $appliIdx == HM_IDX then
-      system("head -n #{nbLine - 2} log     > log_tmp")
-      system("tail -n #{nbLine - 4} log_tmp > #{$appli[$appliIdx]["label"]}/#{md5}")
+      sysIO("head -n #{nbLine - 2} log     > log_tmp")
+      sysIO("tail -n #{nbLine - 4} log_tmp > #{$appli[$appliIdx]["label"]}/#{md5}")
       File.delete("log_tmp")
     elsif $appliIdx == OPEN_HEVC_IDX then
-      system("head -n #{nbLine - 1} log     > #{$appli[$appliIdx]["label"]}/#{md5}")
+      sysIO("head -n #{nbLine - 1} log     > #{$appli[$appliIdx]["label"]}/#{md5}")
     end
   end
 end
@@ -189,7 +200,7 @@ def run (binFile, idxFile, nbFile, maxSize)
 
   cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
   timeStart = Time.now
-  system(cmd)
+  sysIO(cmd)
   $runTime = Time.now - timeStart
 
   if $check == true then
