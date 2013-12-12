@@ -118,6 +118,7 @@ def getListFile ()
     list  = Dir.glob("*.bin")
     list += Dir.glob("*.bit")
     list += Dir.glob("*.hvc")
+    list += Dir.glob("*.hevc")
     Dir.chdir(pwd)
     return list.sort
   end
