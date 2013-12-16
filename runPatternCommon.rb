@@ -44,6 +44,7 @@ def getopts (argv)
   $yuv           = false
   nbThreads      = 1
   threadType     = 1
+  layers        = 0
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help();
@@ -54,6 +55,7 @@ def getopts (argv)
     when "-yuv"       : $yuv           = true
     when "-p"         : nbThreads      = argv[i+1].to_i
     when "-f"         : threadType     = argv[i+1].to_i
+    when "-l"         : layers         = argv[i+1].to_i
     end
   end
   help() if $sourcePattern == nil or $exec == nil or (threadType!=1 and threadType!=2 and threadType!=4) 
@@ -63,7 +65,7 @@ def getopts (argv)
 	      else AVCONV_IDX end
 
   if $appliIdx == OPEN_HEVC_IDX then
-    $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} #{$appli[$appliIdx]["option"]}"
+    $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} -l #{layers} #{$appli[$appliIdx]["option"]}"
     if $check == false or $yuv == true then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
@@ -94,6 +96,7 @@ def help ()
   puts "==             -yuv       : check yuv md5                                =="
   puts "==             -p         : nombre of threads for Slice                  =="
   puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
+  puts "==             -l         : layers id to decode                          =="
   puts "==========================================================================="
   exit
 end
@@ -119,6 +122,7 @@ def getListFile ()
     list += Dir.glob("*.bit")
     list += Dir.glob("*.hvc")
     list += Dir.glob("*.hevc")
+    list += Dir.glob("*.shvc")
     Dir.chdir(pwd)
     return list.sort
   end
