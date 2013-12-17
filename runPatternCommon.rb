@@ -42,9 +42,10 @@ def getopts (argv)
   $stop          = true
   $check         = true
   $yuv           = false
-  $idx           = 0
   nbThreads      = 1
   threadType     = 1
+  layers         = 0
+  $idx           = 0
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help();
@@ -55,17 +56,18 @@ def getopts (argv)
     when "-yuv"       : $yuv           = true
     when "-p"         : nbThreads      = argv[i+1].to_i
     when "-f"         : threadType     = argv[i+1].to_i
+    when "-l"         : layers         = argv[i+1].to_i
     when "-idx"       : $idx           = argv[i+1].to_i
     end
   end
   help() if $sourcePattern == nil or $exec == nil or (threadType!=1 and threadType!=2 and threadType!=4) 
   $appliIdx = if /hevc/ =~ $exec then OPEN_HEVC_IDX 
-	      elsif /TAppDecoder/ =~ $exec then HM_IDX
-	      elsif /ffmpeg/ =~ $exec then FFMPEG_IDX
-	      else AVCONV_IDX end
+              elsif /TAppDecoder/ =~ $exec then HM_IDX
+              elsif /ffmpeg/ =~ $exec then FFMPEG_IDX
+              else AVCONV_IDX end
 
   if $appliIdx == OPEN_HEVC_IDX then
-    $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} #{$appli[$appliIdx]["option"]}"
+    $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} -l #{layers} #{$appli[$appliIdx]["option"]}"
     if $check == false or $yuv == true then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
@@ -96,10 +98,22 @@ def help ()
   puts "==             -yuv       : check yuv md5                                =="
   puts "==             -p         : nombre of threads for Slice                  =="
   puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
+  puts "==             -l         : layers id to decode                          =="
   puts "==             -idx       : test only idx source                         =="
   puts "==========================================================================="
   exit
 end
+
+###############################################################################
+# sysIO
+###############################################################################
+def sysIO (cmd)
+    sys = IO.popen(cmd)
+    ret = sys.readlines
+    sys.close_read
+    return ret
+end
+
 ###############################################################################
 # getListFile
 ###############################################################################
@@ -110,6 +124,8 @@ def getListFile ()
     list  = Dir.glob("*.bin")
     list += Dir.glob("*.bit")
     list += Dir.glob("*.hvc")
+    list += Dir.glob("*.hevc")
+    list += Dir.glob("*.shvc")
     Dir.chdir(pwd)
     return list.sort
   end
@@ -150,7 +166,7 @@ end
 def getFileNameYUV (binFile)
   return "#{File.basename(binFile, File.extname(binFile))}" if !File.exists?("log")
   cmd     = "grep frame log"
-  ret     = IO.popen(cmd).readlines
+  ret     = sysIO(cmd)
   size    = ret[ret.size-1].scan(/.*video_size= ([0-9]*x[0-9]*)/)[0][0]
   return "#{File.basename(binFile, File.extname(binFile))}_#{size}.yuv"
 end
@@ -159,16 +175,16 @@ end
 ###############################################################################
 def save_md5(md5) 
   if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
-    system("cp log #{$appli[$appliIdx]["label"]}/#{md5}")
+    sysIO("cp log #{$appli[$appliIdx]["label"]}/#{md5}")
   else
-    ret     = IO.popen("wc -l log").readlines
+    ret     = sysIO("wc -l log")
     nbLine  = (ret[0].scan(/([0-9]*) */))[0][0].to_i
     if $appliIdx == HM_IDX then
-      system("head -n #{nbLine - 2} log     > log_tmp")
-      system("tail -n #{nbLine - 4} log_tmp > #{$appli[$appliIdx]["label"]}/#{md5}")
+      sysIO("head -n #{nbLine - 2} log     > log_tmp")
+      sysIO("tail -n #{nbLine - 4} log_tmp > #{$appli[$appliIdx]["label"]}/#{md5}")
       File.delete("log_tmp")
     elsif $appliIdx == OPEN_HEVC_IDX then
-      system("head -n #{nbLine - 1} log     > #{$appli[$appliIdx]["label"]}/#{md5}")
+      sysIO("head -n #{nbLine - 1} log     > #{$appli[$appliIdx]["label"]}/#{md5}")
     end
   end
 end
@@ -192,7 +208,7 @@ def run (binFile, idxFile, nbFile, maxSize)
 
   cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
   timeStart = Time.now
-  system(cmd)
+  sysIO(cmd)
   $runTime = Time.now - timeStart
 
   if $check == true then
