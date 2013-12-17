@@ -42,6 +42,7 @@ def getopts (argv)
   $stop          = true
   $check         = true
   $yuv           = false
+  $idx           = 0
   nbThreads      = 1
   threadType     = 1
   for i in (0..argv.size) do
@@ -54,6 +55,7 @@ def getopts (argv)
     when "-yuv"       : $yuv           = true
     when "-p"         : nbThreads      = argv[i+1].to_i
     when "-f"         : threadType     = argv[i+1].to_i
+    when "-idx"       : $idx           = argv[i+1].to_i
     end
   end
   help() if $sourcePattern == nil or $exec == nil or (threadType!=1 and threadType!=2 and threadType!=4) 
@@ -64,7 +66,7 @@ def getopts (argv)
 
   if $appliIdx == OPEN_HEVC_IDX then
     $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} #{$appli[$appliIdx]["option"]}"
-    if $check == false and $yuv == false then
+    if $check == false or $yuv == true then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
@@ -94,6 +96,7 @@ def help ()
   puts "==             -yuv       : check yuv md5                                =="
   puts "==             -p         : nombre of threads for Slice                  =="
   puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
+  puts "==             -idx       : test only idx source                         =="
   puts "==========================================================================="
   exit
 end
@@ -237,7 +240,7 @@ def main ()
     puts cmd
     printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
-      run(binFile, idxFile+1, listFile.length, maxSize)
+      run(binFile, idxFile+1, listFile.length, maxSize) if $idx == 0 or $idx == idxFile+1
     end
   end
 end
