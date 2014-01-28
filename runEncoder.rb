@@ -132,14 +132,29 @@ setParam()
 
 for i in (0 ... $QPBL.size) do
 
-  stream_out = "#{$out_dir}/#{$yuv_name}_#{$width}x#{$height}_#{$QPBL[i]}_#{$QPEL[i]}_#{$fps}_#{$ratio}"
+  stream_out = "#{$out_dir}/#{$yuv_name}_#{$width}x#{$height}"
+  if $numLayers == 1 then
+    stream_out = "#{stream_out}_#{$QPEL[i]}"
+  else
+    stream_out = "#{stream_out}_#{$QPBL[i]}_#{$QPEL[i]}"
+  end
+  stream_out = "#{stream_out}_#{$fps}_#{$ratio}"
   if $wpp then
     stream_out = "#{stream_out}_wpp.shvc"
   else
     stream_out = "#{stream_out}.shvc"
   end
 
-  cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv -i1 #{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers} --SEIDecodedPictureHash=1"
+  name_i0 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv"
+  name_i1 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv"
+
+  cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
+  if $numLayers == 1 then
+    cmd = "#{cmd} -q0 #{$QPEL[i]} -q1 #{$QPEL[i]}"
+  else
+    cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
+  end
+  cmd = "#{cmd} --SEIDecodedPictureHash=1"
   if $wpp then
     cmd = "#{cmd} --WaveFrontSynchro=1"
   end
