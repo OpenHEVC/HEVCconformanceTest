@@ -47,7 +47,7 @@ def getopts (argv)
   $mode      = "ra"
   $ratio     = "SNR"
   $wpp       = false
-  $numLayers = "1"
+  $numLayers = 1
   for i in (0..argv.size) do
     case argv[i]
     when "-h"         : help()
@@ -57,7 +57,7 @@ def getopts (argv)
     when "-mode"      : $mode      = argv[i+1]
     when "-ratio"     : $ratio     = argv[i+1]
     when "-wpp"       : $wpp       = true
-    when "-l"         : $numLayers = argv[i+1]
+    when "-l"         : $numLayers = argv[i+1].to_i
     end
   end
   if $yuv_dir == nil or $out_dir == nil or $yuv_name == nil then
@@ -82,7 +82,7 @@ def setParam ()
     $suffix_i0 = "_zerophase_0.9pi"
   end
     
-  if $numLayers == "1" # single layer configuration
+  if $numLayers == 1 then # single layer configuration
     $QPEL = [20, 22, 24, 26, 28, 30, 32, 34, 38]
   else # multiple-layer configuration
       if $ratio == "SNR" then
@@ -131,40 +131,101 @@ def getSize ()
   $fps       = ret[ret.size-1].scan(/FrameRate0 *: ([0-9]*)/)[0][0]
 end
 ###############################################################################
+# getOutputLog
+###############################################################################
+def getOutputLog ()
+  $outputLog = "#{$out_dir}/#{$yuv_name}"
+  if $numLayers != 1 then
+    $outputLog = "#{$outputLog}_#{$ratio}"
+  end
+  $outputLog = "#{$outputLog}_#{$mode}"
+  if $wpp then
+    $outputLog = "#{$outputLog}_wpp"
+  end
+  $outputLog = "#{$outputLog}.txt"
+  if $numLayers != 1 then
+    sysIO("echo \"QPBL\tQPEL\tBitrate\tPSNRY\tPSNRU\tPSNRV\tBitrate\tPSNRY\tPSNRU\tPSNRV\" >> #{$outputLog}")
+  else
+    sysIO("echo \"QPEL\tBitrate\tPSNRY\tPSNRU\tPSNRV\" >> #{$outputLog}")
+  end
+end
+###############################################################################
+# getOutputStream
+###############################################################################
+def getOutputStream (i)
+  out = "#{$out_dir}/#{$yuv_name}_#{$width}x#{$height}"
+  if $numLayers != 1 then
+    out = "#{out}_#{$QPBL[i]}_#{$QPEL[i]}_#{$ratio}"
+  else
+    out = "#{out}_#{$QPEL[i]}"
+  end
+  out = "#{out}_#{$fps}"
+  if $wpp then
+    out = "#{out}_wpp.shvc"
+  else
+    out = "#{out}.shvc"
+  end
+  return out
+end
+###############################################################################
+# getEncoderCmd
+###############################################################################
+def getEncoderCmd (stream_out, i)
+    name_i0 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv"
+    name_i1 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv"
+  
+    cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
+    if $numLayers != 1 then
+      cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
+    else
+      cmd = "#{cmd} -q0 #{$QPEL[i]} -q1 #{$QPEL[i]}"
+    end
+    cmd = "#{cmd} --SEIDecodedPictureHash=1"
+    if $wpp then
+      cmd = "#{cmd} --WaveFrontSynchro=1"
+    end
+    cmd = "#{cmd} --WaveFrontSynchro=1 -f 1 > #{$outputLog}.log"
+  return cmd
+end
+###############################################################################
+# parserResult
+###############################################################################
+def parserResult (i)
+  cmd     = "grep -n SUMMARY #{$outputLog}.log"
+  ret     = sysIO(cmd)
+  numLine = ret[ret.size-1].scan(/([0-9]*):.*/)[0][0].to_i
+  cmd     = "head -n #{numLine+3} #{$outputLog}.log | tail -n 4 > #{$outputLog}.sum"
+  ret     = sysIO(cmd)
+
+  cmd     = "grep  L0 #{$outputLog}.sum"
+  ret     = sysIO(cmd)
+  l0      = ret[ret.size-1].scan(/[\t| ]*L0[\t| ]*[0-9]*[\t| ]*a[\t| ]*([0-9|\.]*)[\t| ]*([0-9|\.]*)[\t| ]*([0-9|\.]*)[\t| ]*([0-9|\.]*)/)[0]
+
+  if $numLayers != 1 then
+    cmd   = "grep  L1 #{$outputLog}.sum"
+    ret   = sysIO(cmd)
+    l1    = ret[ret.size-1].scan(/[\t| ]*L1[\t| ]*[0-9]*[\t| ]*a[\t| ]*([0-9|\.]*)[\t| ]*([0-9|\.]*)[\t| ]*([0-9|\.]*)[\t| ]*([0-9|\.]*)/)[0]
+    line  = "#{$QPBL[i]}\t#{$QPEL[i]}\t#{l0[0]}\t#{l0[1]}\t#{l0[2]}\t#{l0[3]}\t#{l1[0]}\t#{l1[1]}\t#{l1[2]}\t#{l1[3]}"
+  else
+    line  = "#{$QPEL[i]}\t#{l0[0]}\t#{l0[1]}\t#{l0[2]}\t#{l0[3]}"
+  end
+  sysIO("echo \"#{line}\" >> #{$outputLog}")
+  File.delete("#{$outputLog}.log")
+  File.delete("#{$outputLog}.sum")
+end
+###############################################################################
 # main
 ###############################################################################
 getopts(ARGV)
 setParam()
-
+getOutputLog()
 for i in (0 ... $QPEL.size) do
-
-  stream_out = "#{$out_dir}/#{$yuv_name}_#{$width}x#{$height}"
-  if $numLayers == 1 then
-    stream_out = "#{stream_out}_#{$QPEL[i]}"
-  else
-    stream_out = "#{stream_out}_#{$QPBL[i]}_#{$QPEL[i]}"
+  stream_out = getOutputStream(i)
+  puts stream_out
+  if !File.exists?(stream_out) then
+    cmd = getEncoderCmd(stream_out, i)
+    sysIO(cmd)
+    parserResult(i)
   end
-  stream_out = "#{stream_out}_#{$fps}_#{$ratio}"
-  if $wpp then
-    stream_out = "#{stream_out}_wpp.shvc"
-  else
-    stream_out = "#{stream_out}.shvc"
-  end
-
-  name_i0 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv"
-  name_i1 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv"
-
-  cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
-  if $numLayers == 1 then
-    cmd = "#{cmd} -q0 #{$QPEL[i]} -q1 #{$QPEL[i]}"
-  else
-    cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
-  end
-  cmd = "#{cmd} --SEIDecodedPictureHash=1"
-  if $wpp then
-    cmd = "#{cmd} --WaveFrontSynchro=1"
-  end
-  puts cmd
-  system(cmd)
-  exit(0)
 end
+
