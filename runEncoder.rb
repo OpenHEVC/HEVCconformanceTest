@@ -81,13 +81,19 @@ def setParam ()
   if $ratio != "SNR" then
     $suffix_i0 = "_zerophase_0.9pi"
   end
-  if $ratio == "SNR" then
-    $QPBL = [26, 26, 30, 30, 34, 34, 38, 38]
-    $QPEL = [20, 22, 24, 26, 28, 30, 32, 34]
-  else
-    $QPBL = [22, 22, 26, 26, 30, 30, 34, 34]
-    $QPEL = [22, 24, 26, 28, 30, 32, 34, 36]
-  end
+    
+  if $numLayers == "1" # single layer configuration
+    $QPEL = [20, 22, 24, 26, 28, 30, 32, 34, 38]
+  else # multiple-layer configuration
+      if $ratio == "SNR" then
+          $QPBL = [26, 26, 30, 30, 34, 34, 38, 38]
+          $QPEL = [20, 22, 24, 26, 28, 30, 32, 34]
+      else
+          $QPBL = [22, 22, 26, 26, 30, 30, 34, 34]
+          $QPEL = [22, 24, 26, 28, 30, 32, 34, 36]
+      end
+    end
+    
 
   if !File.exists?($per_sequence_svc) then
     puts "File #{$per_sequence_svc} not exist"
@@ -130,7 +136,7 @@ end
 getopts(ARGV)
 setParam()
 
-for i in (0 ... $QPBL.size) do
+for i in (0 ... $QPEL.size) do
 
   stream_out = "#{$out_dir}/#{$yuv_name}_#{$width}x#{$height}"
   if $numLayers == 1 then
