@@ -184,7 +184,7 @@ def getEncoderCmd (stream_out, i)
     if $wpp then
       cmd = "#{cmd} --WaveFrontSynchro=1"
     end
-    cmd = "#{cmd} --WaveFrontSynchro=1 -f 1 > #{$outputLog}.log"
+    cmd = "#{cmd} > #{$outputLog}.log"
   return cmd
 end
 ###############################################################################
