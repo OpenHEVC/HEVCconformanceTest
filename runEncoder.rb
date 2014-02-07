@@ -174,10 +174,10 @@ def getEncoderCmd (stream_out, i)
     name_i0 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv"
     name_i1 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv"
     if $numLayers != 1 then
-        cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc}  -b #{stream_out} -i0 #{name_i1} -wdt0 #{$width} -hgt0 #{$height}"
+        cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
         cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
         else
-        cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
+		cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc}  -b #{stream_out} -i0 #{name_i1} -wdt0 #{$width} -hgt0 #{$height}"
         cmd = "#{cmd} -q0 #{$QPEL[i]} -q1 #{$QPEL[i]}"
     end
     cmd = "#{cmd} --SEIDecodedPictureHash=1"
