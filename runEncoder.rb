@@ -50,14 +50,14 @@ def getopts (argv)
   $numLayers = 1
   for i in (0..argv.size) do
     case argv[i]
-    when "-h"         : help()
-    when "-idir"      : $yuv_dir   = argv[i+1]
-    when "-odir"      : $out_dir   = argv[i+1]
-    when "-name"      : $yuv_name  = argv[i+1]
-    when "-mode"      : $mode      = argv[i+1]
-    when "-ratio"     : $ratio     = argv[i+1]
-    when "-wpp"       : $wpp       = true
-    when "-l"         : $numLayers = argv[i+1].to_i
+    when "-h"         then help()
+    when "-idir"      then $yuv_dir   = argv[i+1]
+    when "-odir"      then $out_dir   = argv[i+1]
+    when "-name"      then $yuv_name  = argv[i+1]
+    when "-mode"      then $mode      = argv[i+1]
+    when "-ratio"     then $ratio     = argv[i+1]
+    when "-wpp"       then $wpp       = true
+    when "-l"         then $numLayers = argv[i+1].to_i
     end
   end
   if $yuv_dir == nil or $out_dir == nil or $yuv_name == nil then
@@ -70,10 +70,10 @@ end
 def setParam ()
   $encoder_cfg = "#{ENV['SHVC_DIR']}/cfg"
   case $mode
-  when "ra" : $encoder_cfg = "#{$encoder_cfg}/encoder_randomaccess_main.cfg"
-  when "lp" : $encoder_cfg = "#{$encoder_cfg}/encoder_lowdelay_P_main.cfg"
-  when "ld" : $encoder_cfg = "#{$encoder_cfg}/encoder_lowdelay_main.cfg"
-  when "i"  : $encoder_cfg = "#{$encoder_cfg}/encoder_intra_main.cfg"
+  when "ra" then $encoder_cfg = "#{$encoder_cfg}/encoder_randomaccess_main.cfg"
+  when "lp" then $encoder_cfg = "#{$encoder_cfg}/encoder_lowdelay_P_main.cfg"
+  when "ld" then $encoder_cfg = "#{$encoder_cfg}/encoder_lowdelay_main.cfg"
+  when "i"  then $encoder_cfg = "#{$encoder_cfg}/encoder_intra_main.cfg"
   end
 
   $per_sequence_svc = "#{ENV['SHVC_DIR']}/cfg/per-sequence-svc/#{$yuv_name}-#{$ratio}.cfg"
@@ -173,18 +173,18 @@ end
 def getEncoderCmd (stream_out, i)
     name_i0 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv"
     name_i1 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv"
-  
-    cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
     if $numLayers != 1 then
-      cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
-    else
-      cmd = "#{cmd} -q0 #{$QPEL[i]} -q1 #{$QPEL[i]}"
+        cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
+        cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
+        else
+		cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc}  -b #{stream_out} -i0 #{name_i1} -wdt0 #{$width} -hgt0 #{$height}"
+        cmd = "#{cmd} -q0 #{$QPEL[i]} -q1 #{$QPEL[i]}"
     end
     cmd = "#{cmd} --SEIDecodedPictureHash=1"
     if $wpp then
       cmd = "#{cmd} --WaveFrontSynchro=1"
     end
-    cmd = "#{cmd} --WaveFrontSynchro=1 -f 1 > #{$outputLog}.log"
+    cmd = "#{cmd} > #{$outputLog}.log"
   return cmd
 end
 ###############################################################################
@@ -224,6 +224,7 @@ for i in (0 ... $QPEL.size) do
   puts stream_out
   if !File.exists?(stream_out) then
     cmd = getEncoderCmd(stream_out, i)
+      #       puts cmd
     sysIO(cmd)
     parserResult(i)
   end
