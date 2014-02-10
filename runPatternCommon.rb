@@ -45,6 +45,7 @@ def getopts (argv)
   nbThreads      = 1
   threadType     = 1
   layers         = 0
+  $b10           = false
   $idx           = 0
   for i in (0..argv.size) do
     case argv[i]
@@ -57,6 +58,7 @@ def getopts (argv)
     when "-p"         : nbThreads      = argv[i+1].to_i
     when "-f"         : threadType     = argv[i+1].to_i
     when "-l"         : layers         = argv[i+1].to_i
+    when "-10b"       : $b10           = true
     when "-idx"       : $idx           = argv[i+1].to_i
     end
   end
@@ -99,6 +101,7 @@ def help ()
   puts "==             -p         : nombre of threads for Slice                  =="
   puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
   puts "==             -l         : layers id to decode                          =="
+  puts "==             -10b       : 10 bits filter                               =="
   puts "==             -idx       : test only idx source                         =="
   puts "==========================================================================="
   exit
@@ -194,7 +197,7 @@ end
 def run (binFile, idxFile, nbFile, maxSize)
   File.delete("log")   if File.exists?("log")
   File.delete("error") if File.exists?("error")
-
+  print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
   if $check == true and $yuv == true then 
     if $appliIdx ==  AVCONV_IDX then
       $appli[$appliIdx]["output"] = "-f md5 -"
@@ -256,10 +259,14 @@ def main ()
     puts cmd
     printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
-      print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
       if ($idx == 0 or $idx == idxFile+1) and idxFile != 101
-	run(binFile, idxFile+1, listFile.length, maxSize)
+	if ($b10 == false) then
+	  run(binFile, idxFile+1, listFile.length, maxSize)
+	elsif (binFile =~ /.*MAIN10.*/ )then
+	  run(binFile, idxFile+1, listFile.length, maxSize)
+	end
       else
+	print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
 	puts " skip  ="
       end
     end
