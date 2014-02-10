@@ -194,7 +194,6 @@ end
 def run (binFile, idxFile, nbFile, maxSize)
   File.delete("log")   if File.exists?("log")
   File.delete("error") if File.exists?("error")
-  print "= #{idxFile.to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
 
   if $check == true and $yuv == true then 
     if $appliIdx ==  AVCONV_IDX then
@@ -239,7 +238,8 @@ def main ()
   Dir.mkdir($appli[$appliIdx]["label"])
   
   listFile = getListFile()
-  if listFile.length != 0 then
+  nbFile = listFile.length
+  if nbFile != 0 then
     maxSize  = getMaxSizeFileName(listFile)
     if $check == true and $yuv == true then 
       if $appliIdx ==  AVCONV_IDX then
@@ -256,7 +256,12 @@ def main ()
     puts cmd
     printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
-      run(binFile, idxFile+1, listFile.length, maxSize) if $idx == 0 or $idx == idxFile+1
+      print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
+      if ($idx == 0 or $idx == idxFile+1) and idxFile != 101
+	run(binFile, idxFile+1, listFile.length, maxSize)
+      else
+	puts " skip  ="
+      end
     end
   end
 end
