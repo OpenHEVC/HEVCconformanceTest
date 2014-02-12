@@ -259,15 +259,15 @@ def main ()
     puts cmd
     printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
-      if ($idx == 0 or $idx == idxFile+1) and idxFile != 101
-	if ($b10 == false) then
-	  run(binFile, idxFile+1, listFile.length, maxSize)
-	elsif (binFile =~ /.*MAIN10.*/ )then
-	  run(binFile, idxFile+1, listFile.length, maxSize)
-	end
-      else
-	print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-	puts " skip  ="
+      if (($idx == 0 or $idx == idxFile+1) and idxFile != 101) then
+        if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
+          run(binFile, idxFile+1, listFile.length, maxSize)
+        end
+      elsif ($idx == 0) then
+        if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
+          print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
+          puts " skip  ="
+        end
       end
     end
   end
