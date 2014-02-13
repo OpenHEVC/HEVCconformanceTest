@@ -126,6 +126,8 @@ def getListFile ()
     Dir.chdir($sourcePattern)
     list  = Dir.glob("*.bin")
     list += Dir.glob("*.bit")
+    list += Dir.glob("*.265")
+    list += Dir.glob("*.mp4")
     list += Dir.glob("*.hvc")
     list += Dir.glob("*.hevc")
     list += Dir.glob("*.shvc")
@@ -261,7 +263,7 @@ def main ()
     listFile.each_with_index do |binFile,idxFile|
       if (($idx == 0 or $idx == idxFile+1) and idxFile != 101) then
         if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
-          run(binFile, idxFile+1, listFile.length, maxSize)
+          run(binFile, idxFile+1, listFile.length, maxSize) 
         end
       elsif ($idx == 0) then
         if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
