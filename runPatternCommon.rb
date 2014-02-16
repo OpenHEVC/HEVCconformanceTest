@@ -45,6 +45,7 @@ def getopts (argv)
   nbThreads      = 1
   threadType     = 1
   layers         = 0
+  $b10           = false
   $idx           = 0
   for i in (0..argv.size) do
     case argv[i]
@@ -57,6 +58,7 @@ def getopts (argv)
     when "-p"         then nbThreads      = argv[i+1].to_i
     when "-f"         then threadType     = argv[i+1].to_i
     when "-l"         then layers         = argv[i+1].to_i
+    when "-10b"       then $b10           = true
     when "-idx"       then $idx           = argv[i+1].to_i
     end
   end
@@ -90,6 +92,7 @@ end
 def help ()
   puts "==========================================================================="
   puts "== runPattern options :                                                  =="
+<<<<<<< HEAD
   puts "==             -h         then help                                         =="
   puts "==             -dir       then pattern directory path                       =="
   puts "==             -exec      then exec path                                    =="
@@ -100,6 +103,19 @@ def help ()
   puts "==             -f         then thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
   puts "==             -l         then layers id to decode                          =="
   puts "==             -idx       then test only idx source                         =="
+=======
+  puts "==             -h         : help                                         =="
+  puts "==             -dir       : pattern directory path                       =="
+  puts "==             -exec      : exec path                                    =="
+  puts "==             -noStop    : not stop when diff is not ok                 =="
+  puts "==             -noCheck   : no check  md5                                =="
+  puts "==             -yuv       : check yuv md5                                =="
+  puts "==             -p         : nombre of threads for Slice                  =="
+  puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
+  puts "==             -l         : layers id to decode                          =="
+  puts "==             -10b       : 10 bits filter                               =="
+  puts "==             -idx       : test only idx source                         =="
+>>>>>>> d77bfd94bcd85e020f7cf67c9a4f97de28d14a07
   puts "==========================================================================="
   exit
 end
@@ -123,6 +139,8 @@ def getListFile ()
     Dir.chdir($sourcePattern)
     list  = Dir.glob("*.bin")
     list += Dir.glob("*.bit")
+    list += Dir.glob("*.265")
+    list += Dir.glob("*.mp4")
     list += Dir.glob("*.hvc")
     list += Dir.glob("*.hevc")
     list += Dir.glob("*.shvc")
@@ -194,7 +212,7 @@ end
 def run (binFile, idxFile, nbFile, maxSize)
   File.delete("log")   if File.exists?("log")
   File.delete("error") if File.exists?("error")
-
+  print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
   if $check == true and $yuv == true then 
     if $appliIdx ==  AVCONV_IDX then
       $appli[$appliIdx]["output"] = "-f md5 -"
@@ -256,11 +274,15 @@ def main ()
     puts cmd
     printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
-      print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-      if ($idx == 0 or $idx == idxFile+1) and idxFile != 101
-	run(binFile, idxFile+1, listFile.length, maxSize)
-      else
-	puts " skip  ="
+      if (($idx == 0 or $idx == idxFile+1) and idxFile != 101) then
+        if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
+          run(binFile, idxFile+1, listFile.length, maxSize) 
+        end
+      elsif ($idx == 0) then
+        if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
+          print "= #{(idxFile+1).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
+          puts " skip  ="
+        end
       end
     end
   end

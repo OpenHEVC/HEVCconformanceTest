@@ -105,7 +105,7 @@ def check_perfs (binFile)
   else
     cmd     = "grep frame error"
     ret     = sysIO(cmd)
-    val     = ret[0].scan(/frame= *([0-9]*)/)[0][0].to_i
+    val     = ret[0].scan(/.*frame= *([0-9]*)/)[0][0].to_i
     puts sprintf(" frame= #{val} fps= #{(val/$runTime).round} time= %.2f", $runTime )
   end
 end
