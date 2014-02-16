@@ -92,18 +92,6 @@ end
 def help ()
   puts "==========================================================================="
   puts "== runPattern options :                                                  =="
-<<<<<<< HEAD
-  puts "==             -h         then help                                         =="
-  puts "==             -dir       then pattern directory path                       =="
-  puts "==             -exec      then exec path                                    =="
-  puts "==             -noStop    then not stop when diff is not ok                 =="
-  puts "==             -noCheck   then no check  md5                                =="
-  puts "==             -yuv       then check yuv md5                                =="
-  puts "==             -p         then nombre of threads for Slice                  =="
-  puts "==             -f         then thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
-  puts "==             -l         then layers id to decode                          =="
-  puts "==             -idx       then test only idx source                         =="
-=======
   puts "==             -h         : help                                         =="
   puts "==             -dir       : pattern directory path                       =="
   puts "==             -exec      : exec path                                    =="
@@ -115,7 +103,6 @@ def help ()
   puts "==             -l         : layers id to decode                          =="
   puts "==             -10b       : 10 bits filter                               =="
   puts "==             -idx       : test only idx source                         =="
->>>>>>> d77bfd94bcd85e020f7cf67c9a4f97de28d14a07
   puts "==========================================================================="
   exit
 end
