@@ -48,16 +48,16 @@ def getopts (argv)
   $idx           = 0
   for i in (0..argv.size) do
     case argv[i]
-    when "-h"         : help();
-    when "-dir"       : $sourcePattern = argv[i+1]
-    when "-exec"      : $exec          = argv[i+1]
-    when "-noStop"    : $stop          = false
-    when "-noCheck"   : $check         = false
-    when "-yuv"       : $yuv           = true
-    when "-p"         : nbThreads      = argv[i+1].to_i
-    when "-f"         : threadType     = argv[i+1].to_i
-    when "-l"         : layers         = argv[i+1].to_i
-    when "-idx"       : $idx           = argv[i+1].to_i
+    when "-h"         then help();
+    when "-dir"       then $sourcePattern = argv[i+1]
+    when "-exec"      then $exec          = argv[i+1]
+    when "-noStop"    then $stop          = false
+    when "-noCheck"   then $check         = false
+    when "-yuv"       then $yuv           = true
+    when "-p"         then nbThreads      = argv[i+1].to_i
+    when "-f"         then threadType     = argv[i+1].to_i
+    when "-l"         then layers         = argv[i+1].to_i
+    when "-idx"       then $idx           = argv[i+1].to_i
     end
   end
   help() if $sourcePattern == nil or $exec == nil or (threadType!=1 and threadType!=2 and threadType!=4) 
@@ -90,16 +90,16 @@ end
 def help ()
   puts "==========================================================================="
   puts "== runPattern options :                                                  =="
-  puts "==             -h         : help                                         =="
-  puts "==             -dir       : pattern directory path                       =="
-  puts "==             -exec      : exec path                                    =="
-  puts "==             -noStop    : not stop when diff is not ok                 =="
-  puts "==             -noCheck   : no check  md5                                =="
-  puts "==             -yuv       : check yuv md5                                =="
-  puts "==             -p         : nombre of threads for Slice                  =="
-  puts "==             -f         : thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
-  puts "==             -l         : layers id to decode                          =="
-  puts "==             -idx       : test only idx source                         =="
+  puts "==             -h         then help                                         =="
+  puts "==             -dir       then pattern directory path                       =="
+  puts "==             -exec      then exec path                                    =="
+  puts "==             -noStop    then not stop when diff is not ok                 =="
+  puts "==             -noCheck   then no check  md5                                =="
+  puts "==             -yuv       then check yuv md5                                =="
+  puts "==             -p         then nombre of threads for Slice                  =="
+  puts "==             -f         then thread type (1:Frame, 2:Slice, 4:FrameSlice) =="
+  puts "==             -l         then layers id to decode                          =="
+  puts "==             -idx       then test only idx source                         =="
   puts "==========================================================================="
   exit
 end
