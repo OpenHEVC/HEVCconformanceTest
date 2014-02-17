@@ -211,6 +211,7 @@ def run (binFile, idxFile, nbFile, maxSize)
   end
 
   cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
+  #  puts cmd
   timeStart = Time.now
   sysIO(cmd)
   $runTime = Time.now - timeStart
