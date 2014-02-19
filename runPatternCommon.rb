@@ -262,7 +262,7 @@ def main ()
     puts cmd
     printLine(cmd.size)
     listFile.each_with_index do |binFile,idxFile|
-      if (($idx == 0 or $idx == idxFile+1) and idxFile != 101) then
+      if ($idx == 0 or $idx == idxFile+1) then
         if ($b10 == false or binFile =~ /.*MAIN10.*/ ) then
           run(binFile, idxFile+1, listFile.length, maxSize) 
         end
