@@ -42,9 +42,9 @@ def getopts (argv)
   $stop          = true
   $check         = true
   $yuv           = false
-  nbThreads      = 1
-  threadType     = 1
-  layers         = 0
+  $nbThreads     = 1
+  $threadType    = 1
+  $layers        = 0
   $b10           = false
   $idx           = 0
   for i in (0..argv.size) do
@@ -55,31 +55,31 @@ def getopts (argv)
     when "-noStop"    then $stop          = false
     when "-noCheck"   then $check         = false
     when "-yuv"       then $yuv           = true
-    when "-p"         then nbThreads      = argv[i+1].to_i
-    when "-f"         then threadType     = argv[i+1].to_i
-    when "-l"         then layers         = argv[i+1].to_i
+    when "-p"         then $nbThreads     = argv[i+1].to_i
+    when "-f"         then $threadType    = argv[i+1].to_i
+    when "-l"         then $layers        = argv[i+1].to_i
     when "-10b"       then $b10           = true
     when "-idx"       then $idx           = argv[i+1].to_i
     end
   end
-  help() if $sourcePattern == nil or $exec == nil or (threadType!=1 and threadType!=2 and threadType!=4) 
+  help() if $sourcePattern == nil or $exec == nil or ($threadType!=1 and $threadType!=2 and $threadType!=4) 
   $appliIdx = if /hevc/ =~ $exec then OPEN_HEVC_IDX 
               elsif /TAppDecoder/ =~ $exec then HM_IDX
               elsif /ffmpeg/ =~ $exec then FFMPEG_IDX
               else AVCONV_IDX end
 
   if $appliIdx == OPEN_HEVC_IDX then
-    $appli[$appliIdx]["option"] = "-p #{nbThreads} -f #{threadType} -l #{layers} #{$appli[$appliIdx]["option"]}"
+    $appli[$appliIdx]["option"] = "-p #{$nbThreads} -f #{$threadType} -l #{$layers} #{$appli[$appliIdx]["option"]}"
     if $check == false or $yuv == true then
       $appli[$appliIdx]["option"] = "-c #{$appli[$appliIdx]["option"]}"
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
-    if threadType == 1 then
-      $appli[$appliIdx]["option"] = "-threads #{nbThreads} -thread_type \"frame\" -i"
-    elsif threadType == 2 then
-      $appli[$appliIdx]["option"] = "-threads #{nbThreads} -thread_type \"slice\" -i"
+    if $threadType == 1 then
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
+    elsif $threadType == 2 then
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
     else
-      $appli[$appliIdx]["option"] = "-threads #{nbThreads} -thread_type \"frameslice\" -i"
+      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frameslice\" -i"
     end
     if $check == true and $yuv == false then
       $appli[$appliIdx]["option"] = "-decode-checksum 1 #{$appli[$appliIdx]["option"]}"
@@ -199,7 +199,6 @@ end
 def run (binFile, idxFile, nbFile, maxSize)
   File.delete("log")   if File.exists?("log")
   File.delete("error") if File.exists?("error")
-  print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
   if $check == true and $yuv == true then 
     if $appliIdx ==  AVCONV_IDX then
       $appli[$appliIdx]["output"] = "-f md5 -"
@@ -218,12 +217,12 @@ def run (binFile, idxFile, nbFile, maxSize)
 
   if $check == true then
     if $yuv == true then
-      check_yuv(binFile)
+      check_yuv(binFile, idxFile, nbFile, maxSize)
     else
-      check_error(binFile)
+      check_error(binFile, idxFile, nbFile, maxSize)
     end
   else
-    check_perfs(binFile)
+    check_perfs(binFile, idxFile, nbFile, maxSize)
   end
   if $check == true and $yuv == true then
     if $appliIdx !=  AVCONV_IDX and $appliIdx !=  FFMPEG_IDX then
