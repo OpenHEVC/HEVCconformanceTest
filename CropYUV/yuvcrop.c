@@ -83,9 +83,8 @@ static void cropYUV() {
 	printf("Unable to open output file! : %s\n", output_file);
 	print_usage ();
     }
-    printf("cropYUV start\n");
     while ( feof(fin) == 0 ) {
-	printf("crop Frame %d\n", cptFrame);
+	printf("crop Frame %d\r", cptFrame);
 	fread( buffer, sizeof(unsigned char), crop_up_size, fin);
 	fread( buffer, sizeof(unsigned char), frame_size, fin);
 	fwrite(buffer, sizeof(unsigned char), frame_size, fout);
@@ -102,6 +101,7 @@ static void cropYUV() {
 	fread( buffer, sizeof(unsigned char), crop_down_size>>2, fin);
 	cptFrame++;
     }
+    printf("\n");
 }
 
 int main (int argc, char *argv[]) {
