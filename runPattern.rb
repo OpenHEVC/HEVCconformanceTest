@@ -17,7 +17,7 @@ end
 ###############################################################################
 def check_yuv (binFile, idxFile, nbFile, maxSize)
   print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-  return if grep_msg("Segmentation fault", "error") == -1
+  return true if grep_msg("Segmentation fault", "error") == -1
 
   md5 = "#{File.basename(binFile, File.extname(binFile))}.md5"
   if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
@@ -38,13 +38,14 @@ def check_yuv (binFile, idxFile, nbFile, maxSize)
   else
     puts " ok    ="
   end
+  return false
 end
 ###############################################################################
 # check_error
 ###############################################################################
 def check_error (binFile, idxFile, nbFile, maxSize)
   print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-  return if grep_msg("Segmentation fault", "error") == -1
+  return true if grep_msg("Segmentation fault", "error") == -1
   
   cmd = "grep \"Correct\" error"
   ret = sysIO(cmd)
@@ -63,17 +64,16 @@ def check_error (binFile, idxFile, nbFile, maxSize)
       File.delete("#{$appli[$appliIdx]["label"]}_#{md5}")
       File.delete("#{$appli[HM_IDX]["label"]}_#{md5}")
       if ret[1] != nil then
-	puts " error ="
-	exit if $stop == true
+        puts " error ="
+        exit if $stop == true
       else
-	puts " ok    ="
+        puts " ok    ="
       end
     else
       puts " ="
     end
-    
+
   elsif $appliIdx != HM_IDX then
-    
     cmd = "grep \"Incorrect\" error"
     ret = sysIO(cmd)
     if ret[1] != nil then
@@ -82,66 +82,69 @@ def check_error (binFile, idxFile, nbFile, maxSize)
     else
       puts " ok    ="
     end
-    
-  else
 
+  else
     md5 = "#{File.basename(binFile, File.extname(binFile))}.md5"
     save_md5(md5)
     puts " ="
-  
   end
-
+  return false
 end
 ###############################################################################
 # check_perfs
 ###############################################################################
 def check_perfs (binFile, idxFile, nbFile, maxSize)
-  timeEND = 0
-  if $appliIdx == OPEN_HEVC_IDX then
-    cmd     = "grep frame log"
-    ret     = sysIO(cmd)
-    frame   = ret[0].scan(/.*frame= *([0-9]*)/)[0][0].to_i
-    fps     = ret[0].scan(/.*fps= *([0-9]*)/)[0][0].to_i
-    if ret[0] =~ /Times/ then
-      timeEND = ret[0].scan(/.*time= *([0-9]*)/)[0][0]
-      timeBL  = ret[0].scan(/.*Times ([0-9]*)  [0-9]*  [0-9]*/)[0][0]
-      timeEL  = ret[0].scan(/.*Times [0-9]*  ([0-9]*)  [0-9]*/)[0][0]
-      timeUP  = ret[0].scan(/.*Times [0-9]*  [0-9]*  ([0-9]*)/)[0][0]
-      time    = "#{timeBL},#{timeEL},#{timeUP},#{timeEND}"
-    else
-      time = ret[0].scan(/.*time= *([0-9|\.]*)/)[0][0].to_f
-    end
-  elsif $appliIdx == HM_IDX then
-    cmd     = "grep POC log"
-    ret     = sysIO(cmd)
-    frame   = ret.size
-    fps     = (frame/$runTime).round
-    time    = "#{format("%.2f", $runTime)}"
-  else
-    cmd     = "grep \"frame= \" error"
-    ret     = sysIO(cmd)
-    frame   = ret[0].scan(/.*frame= *([0-9]*)/)[0][0].to_i
-    fps     = (frame/$runTime).round
-    time    = "#{format("%.2f", $runTime)}"
-  end
-
-  csv_name = "#{$sourcePattern}/#{$appli[$appliIdx]["label"]}_l#{$layers}_f#{$threadType}_p#{$nbThreads}.csv"
-  if idxFile == 1 then
-    puts "Generate #{csv_name}"
-    File.open(csv_name, "w") do |io|
-      if timeEND != 0 then
-	io.write("name,frame,fps,Time BL,Time EL,Time UP,Total Time\n")
+  begin
+    timeEND = 0
+    if $appliIdx == OPEN_HEVC_IDX then
+      cmd     = "grep frame log"
+      ret     = sysIO(cmd)
+      frame   = ret[0].scan(/.*frame= *([0-9]*)/)[0][0].to_i
+      fps     = ret[0].scan(/.*fps= *([0-9]*)/)[0][0].to_i
+      if ret[0] =~ /Times/ then
+        timeEND = ret[0].scan(/.*time= *([0-9]*)/)[0][0]
+        timeBL  = ret[0].scan(/.*Times ([0-9]*)  [0-9]*  [0-9]*/)[0][0]
+        timeEL  = ret[0].scan(/.*Times [0-9]*  ([0-9]*)  [0-9]*/)[0][0]
+        timeUP  = ret[0].scan(/.*Times [0-9]*  [0-9]*  ([0-9]*)/)[0][0]
+        time    = "#{timeBL},#{timeEL},#{timeUP},#{timeEND}"
       else
-	io.write("name,frame,fps,Total Time\n")
+        time = ret[0].scan(/.*time= *([0-9|\.]*)/)[0][0].to_f
       end
+    elsif $appliIdx == HM_IDX then
+      cmd     = "grep POC log"
+      ret     = sysIO(cmd)
+      frame   = ret.size
+      fps     = (frame/$runTime).round
+      time    = "#{format("%.2f", $runTime)}"
+    else
+      cmd     = "grep \"frame= \" error"
+      ret     = sysIO(cmd)
+      frame   = ret[0].scan(/.*frame= *([0-9]*)/)[0][0].to_i
+      fps     = (frame/$runTime).round
+      time    = "#{format("%.2f", $runTime)}"
+    end
+
+    csv_name = "#{$sourcePattern}/#{$appli[$appliIdx]["label"]}_l#{$layers}_f#{$threadType}_p#{$nbThreads}.csv"
+    if idxFile == 1 then
+      puts "Generate #{csv_name}"
+      File.open(csv_name, "w") do |io|
+        if timeEND != 0 then
+          io.write("name,frame,fps,Time BL,Time EL,Time UP,Total Time\n")
+        else
+          io.write("name,frame,fps,Total Time\n")
+        end
+        io.close
+      end
+    end
+    print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
+    puts " frame= #{frame} fps= #{fps} time= #{time}"
+    File.open(csv_name, "a") do |io|
+      io.write("#{binFile},#{frame},#{fps},#{time}\n")
       io.close
     end
-  end
-  print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
-  puts " frame= #{frame} fps= #{fps} time= #{time}"
-  File.open(csv_name, "a") do |io|
-    io.write("#{binFile},#{frame},#{fps},#{time}\n")
-    io.close
+    return false
+  rescue
+    return true
   end
 end
 ###############################################################################
