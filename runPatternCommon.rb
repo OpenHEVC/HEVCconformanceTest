@@ -114,21 +114,29 @@ end
 ###############################################################################
 def sysIO (cmd)
   begin
-    sys = nil
-    Timeout.timeout(120) do
-      begin
-        sys = IO.popen(cmd)
-        ret = sys.readlines
-        sys.close_read
-        return ret
-      ensure	
-        if !sys.closed? then
-          Process.kill 9, sys.pid      # <--- This would solve your problem!
-        end
+    begin
+      sys = nil
+      Timeout.timeout(120) do
+    begin
+      sys = IO.popen(cmd)
+      ret = sys.readlines
+      sys.close_read
+      return ret
+    ensure	
+      if !sys.closed? then
+        Process.kill 9, sys.pid      # <--- This would solve your problem!
       end
     end
-  rescue Timeout::Error => ex
-#    puts "#{cmd} : Error Timeout : #{ex}"
+      end
+    rescue Timeout::Error => ex
+      if !sys.closed? then
+    Process.kill 9, sys.pid      # <--- This would solve your problem!
+      end
+    end
+  rescue Interrupt => e
+    if !sys.closed? then
+      Process.kill 9, sys.pid      # <--- This would solve your problem!
+    end
   end
   return nil
 end
@@ -249,13 +257,9 @@ def run (binFile, idxFile, nbFile, maxSize)
     else
       run = check_perfs(binFile, idxFile, nbFile, maxSize)
     end
-    if $check == true and $yuv == true then
-      if $appliIdx !=  AVCONV_IDX and $appliIdx !=  FFMPEG_IDX then
-        File.delete(getFileNameYUV(binFile))
-      end
-    end
-    File.delete("log")
-    File.delete("error")
+    File.delete(getFileNameYUV(binFile)) if File.exist?(getFileNameYUV(binFile))
+    File.delete("log")                   if File.exist?("log")
+    File.delete("error")                 if File.exist?("error")
   end
 end
 ###############################################################################

@@ -18,27 +18,30 @@ end
 def check_yuv (binFile, idxFile, nbFile, maxSize)
   print "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)}"
   return true if grep_msg("Segmentation fault", "error") == -1
-
-  md5 = "#{File.basename(binFile, File.extname(binFile))}.md5"
-  if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
-    save_md5(md5)
-    cmd  = "grep MD5 #{$appli[$appliIdx]["label"]}/#{md5}"
-  else
-    yuv = getFileNameYUV(binFile)
-    cmd = "openssl md5 #{yuv}"
+  begin
+    md5 = "#{File.basename(binFile, File.extname(binFile))}.md5"
+    if $appliIdx == AVCONV_IDX or $appliIdx == FFMPEG_IDX then
+      save_md5(md5)
+      cmd  = "grep MD5 #{$appli[$appliIdx]["label"]}/#{md5}"
+    else
+      yuv = getFileNameYUV(binFile)
+      cmd = "openssl md5 #{yuv}"
+    end
+    ret = sysIO(cmd)
+    val1 = ret[ret.size-1].scan(/MD5.*= *(.*)/)[0][0]
+    cmd  = "grep MD5 tests/#{md5}"
+    ret = sysIO(cmd)
+    val2 = ret[ret.size-1].scan(/MD5=(.*)/)[0][0]
+    if val1 != val2 then
+      puts " error ="
+      exit if $stop == true
+    else
+      puts " ok    ="
+    end
+    return false
+  ensure
+    return true
   end
-  ret = sysIO(cmd)
-  val1 = ret[ret.size-1].scan(/MD5.*= *(.*)/)[0][0]
-  cmd  = "grep MD5 tests/#{md5}"
-  ret = sysIO(cmd)
-  val2 = ret[ret.size-1].scan(/MD5=(.*)/)[0][0]
-  if val1 != val2 then
-    puts " error ="
-    exit if $stop == true
-  else
-    puts " ok    ="
-  end
-  return false
 end
 ###############################################################################
 # check_error
