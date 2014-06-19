@@ -39,7 +39,7 @@ def check_yuv (binFile, idxFile, nbFile, maxSize)
       puts " ok    ="
     end
     return false
-  ensure
+  rescue
     return true
   end
 end

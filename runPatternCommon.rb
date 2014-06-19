@@ -124,13 +124,13 @@ def sysIO (cmd)
       return ret
     ensure	
       if !sys.closed? then
-        Process.kill 9, sys.pid      # <--- This would solve your problem!
+        Process.kill 9, sys.pid    # <--- This would solve your problem!
       end
     end
       end
     rescue Timeout::Error => ex
       if !sys.closed? then
-    Process.kill 9, sys.pid      # <--- This would solve your problem!
+        Process.kill 9, sys.pid    # <--- This would solve your problem!
       end
     end
   rescue Interrupt => e
