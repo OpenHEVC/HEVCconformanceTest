@@ -114,28 +114,22 @@ end
 ###############################################################################
 def sysIO (cmd)
   begin
-    begin
-      sys = nil
-      Timeout.timeout(120) do
-    begin
-      sys = IO.popen(cmd)
-      ret = sys.readlines
-      sys.close_read
-      return ret
-    ensure	
-      if !sys.closed? then
-        Process.kill 9, sys.pid    # <--- This would solve your problem!
+    sys = nil
+    Timeout.timeout(120) do
+      begin
+	sys = IO.popen(cmd)
+	ret = sys.readlines
+	sys.close_read
+	return ret
+      ensure	
+	if !sys.closed? then
+	  Process.kill 9, sys.pid    # <--- This would solve your problem!
+	end
       end
     end
-      end
-    rescue Timeout::Error => ex
-      if !sys.closed? then
-        Process.kill 9, sys.pid    # <--- This would solve your problem!
-      end
-    end
-  rescue Interrupt => e
+  rescue Timeout::Error => ex
     if !sys.closed? then
-      Process.kill 9, sys.pid      # <--- This would solve your problem!
+      Process.kill 9, sys.pid    # <--- This would solve your problem!
     end
   end
   return nil
