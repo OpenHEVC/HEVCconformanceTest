@@ -196,6 +196,7 @@ def getFileNameYUV (binFile)
   return "#{File.basename(binFile, File.extname(binFile))}" if !File.exists?("log")
   cmd     = "grep frame log"
   ret     = sysIO(cmd)
+  return "null" if ret.size == 0
   size    = ret[ret.size-1].scan(/.*video_size= ([0-9]*x[0-9]*)/)[0][0]
   return "#{File.basename(binFile, File.extname(binFile))}_#{size}.yuv"
 end
