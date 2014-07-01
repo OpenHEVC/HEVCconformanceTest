@@ -28,7 +28,7 @@ $appli[HM_IDX]["output"]          = ""
 $appli[HM_IDX]["label"]           = "HM"
 #
 $appli[FFMPEG_IDX]                = {}
-$appli[FFMPEG_IDX]["option"]      = "-decode-checksum 1 -thread_type \"slice\" -i"
+$appli[FFMPEG_IDX]["option"]      = "-flags unaligned  -decode-checksum 1 -thread_type \"slice\" -i"
 $appli[FFMPEG_IDX]["output"]      = "-vsync drop -f null -"
 $appli[FFMPEG_IDX]["label"]       = "ffmpeg"
 #
@@ -75,11 +75,11 @@ def getopts (argv)
     end
   elsif $appliIdx == AVCONV_IDX or  $appliIdx == FFMPEG_IDX  then
     if $threadType == 1 then
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frame\" -i"
+      $appli[$appliIdx]["option"] = "-flags unaligned -threads #{$nbThreads} -thread_type \"frame\" -i"
     elsif $threadType == 2 then
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"slice\" -i"
+      $appli[$appliIdx]["option"] = "-flags unaligned -threads #{$nbThreads} -thread_type \"slice\" -i"
     else
-      $appli[$appliIdx]["option"] = "-threads #{$nbThreads} -thread_type \"frameslice\" -i"
+      $appli[$appliIdx]["option"] = "-flags unaligned -threads #{$nbThreads} -thread_type \"frameslice\" -i"
     end
     if $check == true and $yuv == false then
       $appli[$appliIdx]["option"] = "-decode-checksum 1 #{$appli[$appliIdx]["option"]}"
