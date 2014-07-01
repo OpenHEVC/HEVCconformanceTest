@@ -1,3 +1,5 @@
+require 'timeout'
+
 ###############################################################################
 # Constant
 ###############################################################################
@@ -111,10 +113,26 @@ end
 # sysIO
 ###############################################################################
 def sysIO (cmd)
-    sys = IO.popen(cmd)
-    ret = sys.readlines
-    sys.close_read
-    return ret
+  begin
+    sys = nil
+    Timeout.timeout(120) do
+      begin
+	sys = IO.popen(cmd)
+	ret = sys.readlines
+	sys.close_read
+	return ret
+      ensure	
+	if !sys.closed? then
+	  Process.kill 9, sys.pid    # <--- This would solve your problem!
+	end
+      end
+    end
+  rescue Timeout::Error => ex
+    if !sys.closed? then
+      Process.kill 9, sys.pid    # <--- This would solve your problem!
+    end
+  end
+  return nil
 end
 
 ###############################################################################
@@ -172,6 +190,7 @@ def getFileNameYUV (binFile)
   return "#{File.basename(binFile, File.extname(binFile))}" if !File.exists?("log")
   cmd     = "grep frame log"
   ret     = sysIO(cmd)
+  return "null" if ret.size == 0
   size    = ret[ret.size-1].scan(/.*video_size= ([0-9]*x[0-9]*)/)[0][0]
   return "#{File.basename(binFile, File.extname(binFile))}_#{size}.yuv"
 end
@@ -208,29 +227,35 @@ def run (binFile, idxFile, nbFile, maxSize)
       $appli[$appliIdx]["output"] = "-o #{getFileNameYUV(binFile)}"
     end
   end
+  run   = true
+  nbRun = 0
 
-  cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
-  #  puts cmd
-  timeStart = Time.now
-  sysIO(cmd)
-  $runTime = Time.now - timeStart
+  while (run and nbRun < 3) do
+    nbRun = nbRun + 1
+    cmd = "#{$exec} #{$appli[$appliIdx]["option"]} #{$sourcePattern}/#{binFile} #{$appli[$appliIdx]["output"]} > log 2> error"
+    # puts "#{nbRun} : #{cmd}"
+    timeStart = Time.now
+    cmd_ret = sysIO(cmd)
+    $runTime = Time.now - timeStart
 
-  if $check == true then
-    if $yuv == true then
-      check_yuv(binFile, idxFile, nbFile, maxSize)
+    if cmd_ret == nil then
+      puts "= #{(idxFile).to_s.rjust(nbFile.to_s.size)}/#{nbFile} = #{binFile.ljust(maxSize)} Timeout ="
+      next
+    end
+
+    if $check == true then
+      if $yuv == true then
+        run = check_yuv(binFile, idxFile, nbFile, maxSize)
+      else
+        run = check_error(binFile, idxFile, nbFile, maxSize)
+      end
     else
-      check_error(binFile, idxFile, nbFile, maxSize)
+      run = check_perfs(binFile, idxFile, nbFile, maxSize)
     end
-  else
-    check_perfs(binFile, idxFile, nbFile, maxSize)
+    File.delete(getFileNameYUV(binFile)) if File.exist?(getFileNameYUV(binFile))
+    File.delete("log")                   if File.exist?("log")
+    File.delete("error")                 if File.exist?("error")
   end
-  if $check == true and $yuv == true then
-    if $appliIdx !=  AVCONV_IDX and $appliIdx !=  FFMPEG_IDX then
-      File.delete(getFileNameYUV(binFile))
-    end
-  end
-  File.delete("log")
-  File.delete("error")
 end
 ###############################################################################
 # main
