@@ -77,6 +77,7 @@ def setParam ()
   end
 
   $per_sequence_svc = "#{ENV['SHVC_DIR']}/cfg/per-sequence-svc/#{$yuv_name}-#{$ratio}.cfg"
+  $per_layer = "#{ENV['SHVC_DIR']}/cfg/layers.cfg"
   $suffix_i0 = ""
   if $ratio != "SNR" then
     $suffix_i0 = "_zerophase_0.9pi"
@@ -174,7 +175,7 @@ def getEncoderCmd (stream_out, i)
     name_i0 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$BLwidth}x#{$BLheight}_#{$fps}#{$suffix_i0}.yuv"
     name_i1 = "#{$yuv_dir}/#{$yuv_name}/#{$yuv_name}_#{$width}x#{$height}_#{$fps}.yuv"
     if $numLayers != 1 then
-        cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
+        cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc} -c #{$per_layer} -b #{stream_out} -i0 #{name_i0} -i1 #{name_i1}"
         cmd = "#{cmd} -q0 #{$QPBL[i]} -q1 #{$QPEL[i]} --NumLayers=#{$numLayers}"
         else
 		cmd = "#{$exec} -c #{$encoder_cfg} -c #{$per_sequence_svc}  -b #{stream_out} -i0 #{name_i1} -wdt0 #{$width} -hgt0 #{$height}"
@@ -182,7 +183,7 @@ def getEncoderCmd (stream_out, i)
     end
     cmd = "#{cmd} --SEIDecodedPictureHash=1"
     if $wpp then
-      cmd = "#{cmd} --WaveFrontSynchro=1"
+      cmd = "#{cmd} --WaveFrontSynchro0=1 --WaveFrontSynchro1=1"
     end
     cmd = "#{cmd} > #{$outputLog}.log"
   return cmd
