@@ -84,7 +84,7 @@ def setParam ()
   end
     
   if $numLayers == 1 then # single layer configuration
-    $QPEL = [20, 22, 24, 26, 28, 30, 32, 34, 38]
+    $QPEL = [20, 22, 24, 26, 28, 30, 32, 34, 36]
   else # multiple-layer configuration
       if $ratio == "SNR" then
           $QPBL = [26, 26, 30, 30, 34, 34, 38, 38]
